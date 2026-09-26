@@ -10,7 +10,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldgutter.min.css">
     
     <style>
         :root {
@@ -137,8 +136,6 @@
             color: white;
         }
         .cm-hint-func { color: var(--celeste); }
-        .cm-hint-tag { color: var(--naranja); }
-        .cm-hint-prop { color: var(--lila); }
 
         #blocklyDiv {
             height: 100%;
@@ -191,15 +188,6 @@
             pointer-events: none;
         }
 
-        .svg-element {
-            cursor: pointer;
-            transition: filter 0.15s;
-        }
-
-        .svg-element:hover {
-            filter: drop-shadow(0 0 5px var(--naranja));
-        }
-
         .status-bar {
             background: var(--turquesa);
             color: white;
@@ -226,7 +214,7 @@
         }
         .btn-save:hover { background-color: var(--celeste); color: var(--turquesa); }
 
-        .funcion-item {
+        .funcion-item, .propiedad-item-list {
             background: var(--amarillo-hueso);
             border-radius: 10px;
             padding: 12px;
@@ -235,20 +223,24 @@
             transition: all 0.2s;
         }
 
-        .funcion-item:hover {
+        .propiedad-item-list {
+            border-left-color: var(--lila);
+        }
+
+        .funcion-item:hover, .propiedad-item-list:hover {
             transform: translateX(3px);
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
-        .funcion-item .funcion-nombre { font-weight: 700; color: var(--turquesa); }
-        .funcion-item .funcion-categoria {
+        .funcion-nombre { font-weight: 700; color: var(--turquesa); }
+        .funcion-categoria {
             font-size: 0.75rem;
             background: var(--lila);
             color: white;
             padding: 2px 8px;
             border-radius: 10px;
         }
-        .funcion-item .funcion-acciones { display: flex; gap: 5px; }
+        .funcion-acciones { display: flex; gap: 5px; }
 
         .btn-icon {
             width: 32px; height: 32px; padding: 0;
@@ -289,117 +281,61 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
-        /* Editor de propiedades mejorado */
-        .propiedades-section {
-            background: var(--blanco);
-            border: 2px solid var(--celeste);
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
-        }
-
-        .propiedades-section h6 {
-            color: var(--turquesa);
-            margin-bottom: 10px;
-            font-weight: 700;
-        }
-
-        .propiedad-item {
-            background: var(--amarillo-hueso);
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 10px;
-            margin-bottom: 8px;
-            position: relative;
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .propiedad-item input {
-            flex: 1;
-        }
-
-        .propiedad-item .btn-eliminar {
-            background: var(--rojo-atardecer);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 28px;
-            height: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 1.2rem;
-            line-height: 1;
-            flex-shrink: 0;
-        }
-
-        .propiedad-item .btn-eliminar:hover {
-            background: #e04b50;
-        }
-
-        .btn-agregar-propiedad {
-            background: var(--celeste);
-            color: var(--turquesa);
-            border: 2px solid var(--turquesa);
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 10px;
-            transition: all 0.2s;
-        }
-
-        .btn-agregar-propiedad:hover {
-            background: var(--turquesa);
-            color: white;
-        }
-
-        .btn-insertar-prop {
-            background: var(--lila);
-            color: white;
-            border: none;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            cursor: pointer;
-            margin-left: 5px;
-        }
-
-        .btn-insertar-prop:hover {
-            background: #b19ee8;
-        }
-
-        .codigo-plantilla-container {
-            position: relative;
-        }
-
-        .propiedades-disponibles {
-            background: var(--blanco);
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 10px;
-            margin-top: 10px;
-            max-height: 150px;
-            overflow-y: auto;
-        }
-
         .prop-tag {
             display: inline-block;
             background: var(--lila);
             color: white;
-            padding: 2px 8px;
-            border-radius: 4px;
-            margin: 2px;
+            padding: 3px 10px;
+            border-radius: 15px;
+            margin: 3px;
             font-size: 0.85rem;
             cursor: pointer;
+            border: none;
         }
 
-        .prop-tag:hover {
-            background: var(--turquesa);
+        .prop-tag:hover { background: var(--turquesa); }
+
+        .prop-check {
+            margin-right: 5px;
+            accent-color: var(--turquesa);
+        }
+
+        .propiedad-selector {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            background: var(--blanco);
+        }
+
+        .prop-option {
+            display: flex;
+            align-items: center;
+            padding: 5px;
+            border-radius: 5px;
+        }
+
+        .prop-option:hover {
+            background: var(--amarillo-hueso);
+        }
+
+        .nav-tabs-custom {
+            border-bottom: 2px solid var(--turquesa);
+            margin-bottom: 15px;
+        }
+
+        .nav-tabs-custom .nav-link {
+            color: var(--gris);
+            border: none;
+            border-bottom: 3px solid transparent;
+            font-weight: 600;
+        }
+
+        .nav-tabs-custom .nav-link.active {
+            color: var(--turquesa);
+            border-bottom-color: var(--turquesa);
+            background: transparent;
         }
     </style>
 </head>
@@ -431,6 +367,9 @@
                     </ul>
                 </div>
 
+                <button class="btn btn-nav" onclick="openModalPropiedades()">
+                    <i class="bi bi-sliders me-1"></i> Propiedades
+                </button>
                 <button class="btn btn-nav" onclick="openModalFunciones()">
                     <i class="bi bi-puzzle me-1"></i> Funciones
                 </button>
@@ -470,7 +409,7 @@
             <div class="preview-header">
                 <h6 class="preview-title"><i class="bi bi-eye me-2"></i>Vista Previa</h6>
                 <div class="d-flex gap-2">
-                    <button class="btn btn-sm btn-outline-secondary" onclick="formatearCodigo()" title="Formatear código">
+                    <button class="btn btn-sm btn-outline-secondary" onclick="formatearCodigo()">
                         <i class="bi bi-magic"></i> Formatear
                     </button>
                     <button class="btn btn-sm btn-outline-secondary" onclick="toggleViewport()">
@@ -483,12 +422,69 @@
             </div>
             <div class="preview-container" id="previewContainer">
                 <svg id="svgPreview" xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
-                    <rect class="viewport-rect" id="viewportRect" x="0" y="0" width="800" height="600" style="display: block;"></rect>
+                    <rect class="viewport-rect" id="viewportRect" x="0" y="0" width="800" height="600"></rect>
                 </svg>
             </div>
             <div class="status-bar">
                 <span id="svgInfo">SVG: 800 x 600</span>
                 <span id="elementCount">Elementos: 0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Propiedades Globales -->
+    <div class="modal fade" id="modalPropiedades" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-sliders me-2"></i>Propiedades Globales</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <button class="btn btn-save mb-3" onclick="openFormPropiedad()">
+                        <i class="bi bi-plus-lg me-1"></i> Nueva Propiedad
+                    </button>
+                    <div id="listaPropiedades"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Formulario de Propiedad -->
+    <div class="modal fade" id="modalFormPropiedad" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="formPropTitle">Nueva Propiedad</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="propiedadId">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Nombre</label>
+                        <input type="text" class="form-control" id="propiedadNombre" placeholder="Ej: x, y, fill, width" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Tipo</label>
+                        <select class="form-select" id="propiedadTipo">
+                            <option value="text">Texto</option>
+                            <option value="number">Número</option>
+                            <option value="color">Color</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Valor por Defecto</label>
+                        <input type="text" class="form-control" id="propiedadDefault" placeholder="Ej: 0, #000000, 100">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Descripción (opcional)</label>
+                        <input type="text" class="form-control" id="propiedadDesc" placeholder="Breve descripción">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-save" onclick="guardarPropiedad()">Guardar</button>
+                </div>
             </div>
         </div>
     </div>
@@ -520,45 +516,42 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="formFuncion">
-                        <input type="hidden" id="funcionId">
-                        <div class="row">
-                            <div class="col-md-8 mb-3">
-                                <label class="form-label fw-semibold">Nombre</label>
-                                <input type="text" class="form-control" id="funcionNombre" placeholder="Ej: rectangulo" required>
+                    <input type="hidden" id="funcionId">
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label class="form-label fw-semibold">Nombre</label>
+                            <input type="text" class="form-control" id="funcionNombre" placeholder="Ej: rectangulo" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-semibold">Icono</label>
+                            <input type="text" class="form-control" id="funcionIcono" placeholder="" maxlength="2">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Categoría</label>
+                        <input type="text" class="form-control" id="funcionCategoria" placeholder="Ej: Formas, Texto" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Seleccionar Propiedades (de la lista global)</label>
+                        <div class="propiedad-selector" id="propiedadSelector">
+                            <p class="text-muted text-center mb-0">Cargando propiedades...</p>
+                        </div>
+                        <div class="form-text mt-2">Marca las propiedades que usará esta función.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Código Plantilla</label>
+                        <textarea class="form-control font-monospace" id="funcionCodigo" rows="6" 
+                            placeholder='<rect x="{{x}}" y="{{y}}" width="{{width}}" height="{{height}}" fill="{{fill}}" />' required></textarea>
+                        <div class="form-text mt-2">
+                            <strong>Propiedades seleccionadas:</strong>
+                            <div id="propiedadesDisponibles" class="mt-1">
+                                <span class="text-muted">Selecciona propiedades arriba</span>
                             </div>
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label fw-semibold">Icono</label>
-                                <input type="text" class="form-control" id="funcionIcono" placeholder="" maxlength="2">
-                            </div>
+                            <div class="mt-2">Haz clic en una propiedad para insertar <code>{{nombre}}</code> en el código</div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Categoría</label>
-                            <input type="text" class="form-control" id="funcionCategoria" placeholder="Ej: Formas, Texto, Filtros" required>
-                        </div>
-                        
-                        <div class="propiedades-section">
-                            <h6><i class="bi bi-sliders me-2"></i>Propiedades (Variables)</h6>
-                            <div id="propiedadesContainer"></div>
-                            <button type="button" class="btn-agregar-propiedad" onclick="agregarPropiedad()">
-                                <i class="bi bi-plus-lg me-1"></i> Agregar Propiedad
-                            </button>
-                            <div class="form-text mt-2">Agrega las variables que usará tu función. Cada una tendrá un nombre y valor por defecto.</div>
-                        </div>
-                        
-                        <div class="mb-3 codigo-plantilla-container">
-                            <label class="form-label fw-semibold">Código Plantilla</label>
-                            <textarea class="form-control font-monospace" id="funcionCodigo" rows="6" 
-                                placeholder='<rect x="{{x}}" y="{{y}}" width="{{width}}" height="{{height}}" fill="{{fill}}" />' required></textarea>
-                            <div class="form-text mt-2">
-                                <strong>Propiedades disponibles:</strong> 
-                                <div id="propiedadesDisponibles" class="propiedades-disponibles mt-1">
-                                    <span class="text-muted">Agrega propiedades arriba para verlas aquí</span>
-                                </div>
-                                <div class="mt-2">Haz clic en una propiedad para insertarla en el código como <code>{{nombre}}</code></div>
-                            </div>
-                        </div>
-                    </form>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
@@ -623,12 +616,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/xml-hint.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldcode.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldgutter.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/xml-fold.min.js"></script>
     
     <script src="https://cdn.jsdelivr.net/npm/xml-formatter@3.6.0/dist/browser/xml-formatter.min.js"></script>
     <script src="https://unpkg.com/blockly/blockly.min.js"></script>
@@ -637,16 +626,74 @@
         const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyBV08riD60M5B1kNXWEFeMBqqO3TR6as4xyrGhf8JBCEERikhQQ6pMBkGy-nCl-edegg/exec';
         const STORAGE_KEY_FUNCIONES = 'nexusboard_svg_funciones';
         const STORAGE_KEY_PROYECTOS = 'nexusboard_svg_proyectos';
+        const STORAGE_KEY_PROPIEDADES = 'nexusboard_svg_propiedades';
         const STORAGE_KEY_PROYECTO_ACTUAL = 'nexusboard_svg_proyecto_actual';
 
         let funciones = [];
         let proyectos = [];
+        let propiedades = [];
         let proyectoActual = null;
         let codeEditor = null;
         let blocklyWorkspace = null;
         let uidCounter = 0;
         let viewportVisible = true;
         let blocklyInitialized = false;
+        let selectedPropIds = [];
+
+        // ============ REGISTRO DE BLOQUE BLOCKLY (ANTES DE INIT) ============
+        Blockly.Blocks['funcion_svg'] = {
+            init: function() {
+                const funcId = this.getFieldValue('FUNC_ID');
+                const func = funciones.find(f => f.ID === funcId);
+                if (func) {
+                    this.appendDummyInput().appendField(`${func.Icono || '🔷'} ${func.Nombre}`);
+                    
+                    // Obtener propiedades de esta función
+                    const propIds = (func.PropiedadesIDs || '').split(',').filter(id => id.trim());
+                    const funcProps = propIds.map(id => propiedades.find(p => p.ID === id)).filter(p => p);
+                    
+                    funcProps.forEach(prop => {
+                        if (prop.Tipo === 'number') {
+                            this.appendValueInput(prop.Nombre.toUpperCase())
+                                .setCheck('Number')
+                                .appendField(prop.Nombre);
+                        } else if (prop.Tipo === 'color') {
+                            this.appendValueInput(prop.Nombre.toUpperCase())
+                                .setCheck('Colour')
+                                .appendField(prop.Nombre);
+                        } else {
+                            this.appendValueInput(prop.Nombre.toUpperCase())
+                                .appendField(prop.Nombre);
+                        }
+                    });
+                    
+                    this.setPreviousStatement(true, null);
+                    this.setNextStatement(true, null);
+                    this.setColour(getColorCategoria(func.Categoria));
+                }
+            }
+        };
+
+        Blockly.JavaScript['funcion_svg'] = function(block) {
+            const funcId = block.getFieldValue('FUNC_ID');
+            const func = funciones.find(f => f.ID === funcId);
+            if (!func) return '';
+            
+            const propIds = (func.PropiedadesIDs || '').split(',').filter(id => id.trim());
+            const funcProps = propIds.map(id => propiedades.find(p => p.ID === id)).filter(p => p);
+            
+            let codigo = func.Codigo_Plantilla;
+            const uid = 'el-' + (++uidCounter);
+            
+            funcProps.forEach(prop => {
+                const valor = Blockly.JavaScript.valueToCode(block, prop.Nombre.toUpperCase(), Blockly.JavaScript.ORDER_ATOMIC) || prop.ValorDefault || '';
+                const regex = new RegExp(`\\{\\{${prop.Nombre}\\}\\}`, 'g');
+                codigo = codigo.replace(regex, valor.replace(/"/g, ''));
+            });
+            
+            codigo = codigo.replace(/<([a-z]+)/i, `<$1 data-uid="${uid}"`);
+            return codigo + '\n';
+        };
 
         document.addEventListener('DOMContentLoaded', () => {
             initCodeMirror();
@@ -660,8 +707,6 @@
                 lineNumbers: true,
                 autoCloseBrackets: true,
                 matchBrackets: true,
-                foldGutter: true,
-                gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter'],
                 lineWrapping: true,
                 indentUnit: 2,
                 tabSize: 2,
@@ -672,7 +717,7 @@
                 }
             });
 
-            codeEditor.on('change', (cm, change) => {
+            codeEditor.on('change', () => {
                 actualizarPreview();
                 actualizarEstado();
             });
@@ -682,30 +727,20 @@
                 document.getElementById('cursorPosition').textContent = `Ln ${pos.line + 1}, Col ${pos.ch + 1}`;
             });
 
-            // Autocompletado
+            // Autocompletado SOLO con funciones guardadas
             CodeMirror.registerHelper('hint', 'xml', (editor) => {
                 const cur = editor.getCursor();
                 const token = editor.getTokenAt(cur);
                 const text = token.string;
                 const suggestions = [];
 
-                const svgTags = ['svg', 'rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon', 'path', 'text', 'g', 'defs', 'use', 'clipPath', 'mask', 'filter', 'linearGradient', 'radialGradient', 'stop', 'pattern', 'image'];
-                svgTags.forEach(tag => {
-                    if (tag.startsWith(text.toLowerCase()) || text === '' || text === '<') {
-                        suggestions.push({ 
-                            text: `<${tag}></${tag}>`, 
-                            displayText: tag,
-                            className: 'cm-hint-tag'
-                        });
-                    }
-                });
-
+                // SOLO funciones guardadas, NO etiquetas SVG estándar
                 funciones.forEach(func => {
                     const nombre = func.Nombre.toLowerCase();
-                    if (text === '' || text === '<' || nombre.includes(text.toLowerCase())) {
+                    if (text === '' || nombre.includes(text.toLowerCase())) {
                         suggestions.push({ 
                             text: func.Codigo_Plantilla, 
-                            displayText: `${func.Icono || '🔷'} ${func.Nombre}`,
+                            displayText: `${func.Icono || ''} ${func.Nombre} (${func.Categoria})`,
                             className: 'cm-hint-func'
                         });
                     }
@@ -721,7 +756,7 @@
             });
 
             codeEditor.on('inputRead', function(cm, change) {
-                if (change.origin === '+input' && change.text[0].match(/[a-zA-Z<]/)) {
+                if (change.origin === '+input' && change.text[0].match(/[a-zA-Z]/)) {
                     setTimeout(() => {
                         CodeMirror.commands.autocomplete(cm, null, { completeSingle: false });
                     }, 100);
@@ -791,61 +826,76 @@
             }
         }
 
+        // ============ CARGA DE DATOS CON TIMEOUT ============
         async function cargarDatos() {
             document.getElementById('loadingOverlay').classList.add('active');
 
             const localFunc = localStorage.getItem(STORAGE_KEY_FUNCIONES);
             const localProy = localStorage.getItem(STORAGE_KEY_PROYECTOS);
+            const localProp = localStorage.getItem(STORAGE_KEY_PROPIEDADES);
             const localActual = localStorage.getItem(STORAGE_KEY_PROYECTO_ACTUAL);
 
             if (localFunc) funciones = JSON.parse(localFunc);
             if (localProy) proyectos = JSON.parse(localProy);
+            if (localProp) propiedades = JSON.parse(localProp);
             if (localActual) {
                 proyectoActual = JSON.parse(localActual);
                 cargarProyectoEnEditor(proyectoActual);
             }
 
+            // Fetch con timeout
+            const fetchWithTimeout = (url, timeout = 8000) => {
+                return Promise.race([
+                    fetch(url),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), timeout))
+                ]);
+            };
+
             try {
-                const [resFunc, resProy] = await Promise.all([
-                    fetch(APPS_SCRIPT_URL + '?tipo=funciones'),
-                    fetch(APPS_SCRIPT_URL + '?tipo=proyectos')
+                const [resFunc, resProy, resProp] = await Promise.all([
+                    fetchWithTimeout(APPS_SCRIPT_URL + '?tipo=funciones'),
+                    fetchWithTimeout(APPS_SCRIPT_URL + '?tipo=proyectos'),
+                    fetchWithTimeout(APPS_SCRIPT_URL + '?tipo=propiedades')
                 ]);
 
                 if (resFunc.ok) {
-                    const dataFunc = await resFunc.json();
-                    if (dataFunc.status === 'success') {
-                        funciones = dataFunc.data;
+                    const data = await resFunc.json();
+                    if (data.status === 'success') {
+                        funciones = data.data;
                         localStorage.setItem(STORAGE_KEY_FUNCIONES, JSON.stringify(funciones));
                     }
                 }
 
                 if (resProy.ok) {
-                    const dataProy = await resProy.json();
-                    if (dataProy.status === 'success') {
-                        proyectos = dataProy.data;
+                    const data = await resProy.json();
+                    if (data.status === 'success') {
+                        proyectos = data.data;
                         localStorage.setItem(STORAGE_KEY_PROYECTOS, JSON.stringify(proyectos));
+                    }
+                }
+
+                if (resProp.ok) {
+                    const data = await resProp.json();
+                    if (data.status === 'success') {
+                        propiedades = data.data;
+                        localStorage.setItem(STORAGE_KEY_PROPIEDADES, JSON.stringify(propiedades));
                     }
                 }
 
                 actualizarToolbox();
             } catch (error) {
-                console.error('Error cargando datos:', error);
+                console.warn('Error de sincronización, usando datos locales:', error);
+                actualizarToolbox();
             }
 
             document.getElementById('loadingOverlay').classList.remove('active');
         }
 
         function sendPostViaForm(payload) {
-            return new Promise((resolve, reject) => {
+            return new Promise((resolve) => {
                 const iframe = document.createElement('iframe');
                 iframe.name = 'hidden_frame_' + Date.now();
                 iframe.style.display = 'none';
-                iframe.onload = () => {
-                    setTimeout(() => {
-                        cargarDatos().then(() => resolve({ status: 'success' }));
-                    }, 1000);
-                };
-                iframe.onerror = () => reject(new Error('POST failed'));
                 
                 const form = document.createElement('form');
                 form.method = 'POST';
@@ -861,15 +911,29 @@
                 form.appendChild(input);
                 document.body.appendChild(iframe);
                 document.body.appendChild(form);
+                
+                let resolved = false;
+                iframe.onload = () => {
+                    if (!resolved) {
+                        resolved = true;
+                        setTimeout(() => {
+                            cargarDatos().then(() => {
+                                resolve({ status: 'success' });
+                            });
+                        }, 1000);
+                    }
+                };
+                
                 form.submit();
                 
                 setTimeout(() => {
-                    if (iframe.parentNode) {
-                        document.body.removeChild(iframe);
-                        document.body.removeChild(form);
+                    if (!resolved) {
+                        resolved = true;
+                        cargarDatos().then(() => resolve({ status: 'success' }));
                     }
-                    resolve({ status: 'success' });
-                }, 5000);
+                    if (iframe.parentNode) document.body.removeChild(iframe);
+                    if (form.parentNode) document.body.removeChild(form);
+                }, 6000);
             });
         }
 
@@ -911,7 +975,7 @@
             const svgPreview = document.getElementById('svgPreview');
             
             if (!codigo || !codigo.trim()) {
-                svgPreview.innerHTML = '<rect class="viewport-rect" id="viewportRect" x="0" y="0" width="800" height="600" style="display: ' + (viewportVisible ? 'block' : 'none') + ';"></rect>';
+                svgPreview.innerHTML = '<rect class="viewport-rect" id="viewportRect" x="0" y="0" width="800" height="600"></rect>';
                 document.getElementById('elementCount').textContent = 'Elementos: 0';
                 return;
             }
@@ -1040,86 +1104,229 @@
                     URL.revokeObjectURL(url);
                     showToast(`Imagen ${formato.toUpperCase()} descargada`);
                 };
-                img.onerror = function() {
-                    showToast('Error al generar imagen', 'danger');
-                };
+                img.onerror = () => showToast('Error al generar imagen', 'danger');
                 img.src = url;
             }
         }
 
-        // ============ GESTIÓN DE PROPIEDADES MEJORADA ============
-        let propiedadCounter = 0;
-
-        function agregarPropiedad(nombre = '', defaultValue = '') {
-            propiedadCounter++;
-            const container = document.getElementById('propiedadesContainer');
-            const div = document.createElement('div');
-            div.className = 'propiedad-item';
-            div.id = `propiedad-${propiedadCounter}`;
-            
-            div.innerHTML = `
-                <input type="text" class="form-control form-control-sm prop-nombre" value="${nombre}" placeholder="Nombre (ej: x, fill)" required>
-                <input type="text" class="form-control form-control-sm prop-default" value="${defaultValue}" placeholder="Valor por defecto">
-                <button type="button" class="btn-eliminar" onclick="eliminarPropiedad(${propiedadCounter})" title="Eliminar">×</button>
-            `;
-            
-            container.appendChild(div);
-            actualizarPropiedadesDisponibles();
+        // ============ PROPIEDADES GLOBALES ============
+        function openModalPropiedades() {
+            renderListaPropiedades();
+            new bootstrap.Modal(document.getElementById('modalPropiedades')).show();
         }
 
-        function eliminarPropiedad(id) {
-            const elem = document.getElementById(`propiedad-${id}`);
-            if (elem) {
-                elem.remove();
-                actualizarPropiedadesDisponibles();
+        function renderListaPropiedades() {
+            const container = document.getElementById('listaPropiedades');
+            if (propiedades.length === 0) {
+                container.innerHTML = '<p class="text-muted text-center py-4">No hay propiedades globales. Crea la primera.</p>';
+                return;
+            }
+            container.innerHTML = propiedades.map(prop => `
+                <div class="propiedad-item-list">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="funcion-nombre" style="color: var(--lila);">${prop.Nombre}</span>
+                            <span class="funcion-categoria ms-2" style="background: var(--turquesa);">${prop.Tipo}</span>
+                            <span class="ms-2 small text-muted">Default: ${prop.ValorDefault || 'vacío'}</span>
+                        </div>
+                        <div class="funcion-acciones">
+                            <button class="btn-icon btn-edit" onclick="editarPropiedad('${prop.ID}')" style="background: var(--lila); color: white;">
+                                <i class="bi bi-pencil-fill"></i>
+                            </button>
+                            <button class="btn-icon btn-delete" onclick="borrarPropiedad('${prop.ID}')" style="background: var(--rojo-atardecer); color: white;">
+                                <i class="bi bi-trash-fill"></i>
+                            </button>
+                        </div>
+                    </div>
+                    ${prop.Descripcion ? `<div class="mt-1 small text-muted">${prop.Descripcion}</div>` : ''}
+                </div>
+            `).join('');
+        }
+
+        function openFormPropiedad(id = null) {
+            document.getElementById('propiedadId').value = '';
+            document.getElementById('propiedadNombre').value = '';
+            document.getElementById('propiedadTipo').value = 'text';
+            document.getElementById('propiedadDefault').value = '';
+            document.getElementById('propiedadDesc').value = '';
+            document.getElementById('formPropTitle').textContent = 'Nueva Propiedad';
+
+            if (id) {
+                const prop = propiedades.find(p => p.ID === id);
+                if (prop) {
+                    document.getElementById('propiedadId').value = prop.ID;
+                    document.getElementById('propiedadNombre').value = prop.Nombre;
+                    document.getElementById('propiedadTipo').value = prop.Tipo;
+                    document.getElementById('propiedadDefault').value = prop.ValorDefault || '';
+                    document.getElementById('propiedadDesc').value = prop.Descripcion || '';
+                    document.getElementById('formPropTitle').textContent = 'Editar Propiedad';
+                }
+            }
+
+            bootstrap.Modal.getInstance(document.getElementById('modalPropiedades')).hide();
+            new bootstrap.Modal(document.getElementById('modalFormPropiedad')).show();
+        }
+
+        async function guardarPropiedad() {
+            const id = document.getElementById('propiedadId').value;
+            const payload = {
+                action: id ? 'editar_propiedad' : 'crear_propiedad',
+                nombre: document.getElementById('propiedadNombre').value,
+                tipo: document.getElementById('propiedadTipo').value,
+                valorDefault: document.getElementById('propiedadDefault').value,
+                descripcion: document.getElementById('propiedadDesc').value
+            };
+            if (id) payload.id = id;
+
+            if (!payload.nombre) {
+                alert('El nombre es obligatorio');
+                return;
+            }
+
+            document.getElementById('loadingOverlay').classList.add('active');
+            try {
+                await sendPostViaForm(payload);
+                bootstrap.Modal.getInstance(document.getElementById('modalFormPropiedad')).hide();
+                showToast('Propiedad guardada');
+            } catch (err) {
+                showToast('Error al guardar', 'danger');
+            } finally {
+                document.getElementById('loadingOverlay').classList.remove('active');
             }
         }
 
-        function obtenerPropiedades() {
-            const props = [];
-            document.querySelectorAll('.propiedad-item').forEach(item => {
-                const nombre = item.querySelector('.prop-nombre').value.trim();
-                const defaultValue = item.querySelector('.prop-default').value.trim();
-                
-                if (nombre) {
-                    props.push({ nombre, default: defaultValue });
-                }
-            });
-            return props;
+        function editarPropiedad(id) { openFormPropiedad(id); }
+
+        async function borrarPropiedad(id) {
+            if (!confirm('¿Borrar esta propiedad?')) return;
+            document.getElementById('loadingOverlay').classList.add('active');
+            try {
+                await sendPostViaForm({ action: 'borrar_propiedad', id });
+                showToast('Propiedad borrada');
+            } catch (err) {
+                showToast('Error al borrar', 'danger');
+            } finally {
+                document.getElementById('loadingOverlay').classList.remove('active');
+            }
         }
 
-        function cargarPropiedadesEnFormulario(propiedadesJson) {
-            document.getElementById('propiedadesContainer').innerHTML = '';
-            propiedadCounter = 0;
-            if (propiedadesJson) {
-                try {
-                    const props = JSON.parse(propiedadesJson);
-                    props.forEach(p => {
-                        agregarPropiedad(p.nombre, p.default || '');
-                    });
-                } catch (e) {
-                    console.error('Error cargando propiedades:', e);
+        // ============ FUNCIONES ============
+        function openModalFunciones() {
+            renderListaFunciones();
+            new bootstrap.Modal(document.getElementById('modalFunciones')).show();
+        }
+
+        function renderListaFunciones() {
+            const container = document.getElementById('listaFunciones');
+            if (funciones.length === 0) {
+                container.innerHTML = '<p class="text-muted text-center py-4">No hay funciones creadas.</p>';
+                return;
+            }
+            container.innerHTML = funciones.map(func => {
+                const propIds = (func.PropiedadesIDs || '').split(',').filter(id => id.trim());
+                const propsNombres = propIds.map(id => {
+                    const p = propiedades.find(pr => pr.ID === id);
+                    return p ? p.Nombre : id;
+                }).join(', ');
+                
+                return `
+                <div class="funcion-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="funcion-nombre">${func.Icono || '🔷'} ${func.Nombre}</span>
+                            <span class="funcion-categoria ms-2">${func.Categoria}</span>
+                            <div class="small text-muted mt-1">Props: ${propsNombres || 'ninguna'}</div>
+                        </div>
+                        <div class="funcion-acciones">
+                            <button class="btn-icon btn-edit" onclick="editarFuncion('${func.ID}')" style="background: var(--lila); color: white;">
+                                <i class="bi bi-pencil-fill"></i>
+                            </button>
+                            <button class="btn-icon btn-delete" onclick="borrarFuncion('${func.ID}')" style="background: var(--rojo-atardecer); color: white;">
+                                <i class="bi bi-trash-fill"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mt-2 small text-muted font-monospace" style="max-height: 60px; overflow: hidden;">${func.Codigo_Plantilla}</div>
+                </div>
+            `}).join('');
+        }
+
+        function openFormFuncion(id = null) {
+            document.getElementById('funcionId').value = '';
+            document.getElementById('funcionNombre').value = '';
+            document.getElementById('funcionCategoria').value = '';
+            document.getElementById('funcionIcono').value = '';
+            document.getElementById('funcionCodigo').value = '';
+            document.getElementById('formFuncionTitle').textContent = 'Nueva Función';
+            selectedPropIds = [];
+
+            renderPropiedadSelector();
+
+            if (id) {
+                const func = funciones.find(f => f.ID === id);
+                if (func) {
+                    document.getElementById('funcionId').value = func.ID;
+                    document.getElementById('funcionNombre').value = func.Nombre;
+                    document.getElementById('funcionCategoria').value = func.Categoria;
+                    document.getElementById('funcionIcono').value = func.Icono || '';
+                    document.getElementById('funcionCodigo').value = func.Codigo_Plantilla;
+                    selectedPropIds = (func.PropiedadesIDs || '').split(',').filter(pid => pid.trim());
+                    renderPropiedadSelector();
+                    document.getElementById('formFuncionTitle').textContent = 'Editar Función';
                 }
+            }
+            
+            bootstrap.Modal.getInstance(document.getElementById('modalFunciones')).hide();
+            new bootstrap.Modal(document.getElementById('modalFormFuncion')).show();
+            actualizarPropiedadesDisponibles();
+        }
+
+        function renderPropiedadSelector() {
+            const container = document.getElementById('propiedadSelector');
+            
+            if (propiedades.length === 0) {
+                container.innerHTML = '<p class="text-muted text-center mb-0">No hay propiedades globales. <a href="#" onclick="event.preventDefault(); bootstrap.Modal.getInstance(document.getElementById(\'modalFormFuncion\')).hide(); openModalPropiedades();">Crear propiedades</a></p>';
+                return;
+            }
+            
+            container.innerHTML = propiedades.map(prop => `
+                <div class="prop-option">
+                    <input type="checkbox" class="prop-check" 
+                        ${selectedPropIds.includes(prop.ID) ? 'checked' : ''} 
+                        onchange="togglePropiedad('${prop.ID}', this.checked)">
+                    <div class="ms-2">
+                        <strong>${prop.Nombre}</strong>
+                        <span class="badge bg-secondary ms-1">${prop.Tipo}</span>
+                        <div class="small text-muted">${prop.Descripcion || 'Default: ' + (prop.ValorDefault || 'vacío')}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function togglePropiedad(id, checked) {
+            if (checked) {
+                if (!selectedPropIds.includes(id)) selectedPropIds.push(id);
+            } else {
+                selectedPropIds = selectedPropIds.filter(pid => pid !== id);
             }
             actualizarPropiedadesDisponibles();
         }
 
         function actualizarPropiedadesDisponibles() {
             const container = document.getElementById('propiedadesDisponibles');
-            const propiedades = obtenerPropiedades();
+            const selectedProps = selectedPropIds.map(id => propiedades.find(p => p.ID === id)).filter(p => p);
             
-            if (propiedades.length === 0) {
-                container.innerHTML = '<span class="text-muted">Agrega propiedades arriba para verlas aquí</span>';
+            if (selectedProps.length === 0) {
+                container.innerHTML = '<span class="text-muted">Selecciona propiedades arriba</span>';
                 return;
             }
             
             container.innerHTML = '';
-            propiedades.forEach(prop => {
+            selectedProps.forEach(prop => {
                 const tag = document.createElement('span');
                 tag.className = 'prop-tag';
-                tag.textContent = `{{${prop.nombre}}}`;
-                tag.title = `Valor por defecto: ${prop.default || 'vacío'}`;
-                tag.onclick = () => insertarPropiedadEnCodigo(prop.nombre);
+                tag.textContent = `{{${prop.Nombre}}}`;
+                tag.onclick = () => insertarPropiedadEnCodigo(prop.Nombre);
                 container.appendChild(tag);
             });
         }
@@ -1136,70 +1343,11 @@
             textarea.focus();
         }
 
-        // ============ FUNCIONES CRUD ============
-        function openModalFunciones() {
-            renderListaFunciones();
-            new bootstrap.Modal(document.getElementById('modalFunciones')).show();
-        }
-
-        function renderListaFunciones() {
-            const container = document.getElementById('listaFunciones');
-            if (funciones.length === 0) {
-                container.innerHTML = '<p class="text-muted text-center py-4">No hay funciones creadas. Crea la primera para comenzar.</p>';
-                return;
-            }
-            container.innerHTML = funciones.map(func => `
-                <div class="funcion-item">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <span class="funcion-nombre">${func.Icono || '🔷'} ${func.Nombre}</span>
-                            <span class="funcion-categoria ms-2">${func.Categoria}</span>
-                        </div>
-                        <div class="funcion-acciones">
-                            <button class="btn-icon btn-edit" onclick="editarFuncion('${func.ID}')" style="background: var(--lila); color: white;">
-                                <i class="bi bi-pencil-fill"></i>
-                            </button>
-                            <button class="btn-icon btn-delete" onclick="borrarFuncion('${func.ID}')" style="background: var(--rojo-atardecer); color: white;">
-                                <i class="bi bi-trash-fill"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="mt-2 small text-muted font-monospace" style="max-height: 60px; overflow: hidden;">${func.Codigo_Plantilla}</div>
-                </div>
-            `).join('');
-        }
-
-        function openFormFuncion(id = null) {
-            document.getElementById('formFuncion').reset();
-            document.getElementById('funcionId').value = '';
-            document.getElementById('formFuncionTitle').textContent = 'Nueva Función';
-            document.getElementById('propiedadesContainer').innerHTML = '';
-            propiedadCounter = 0;
-            actualizarPropiedadesDisponibles();
-
-            if (id) {
-                const func = funciones.find(f => f.ID === id);
-                if (func) {
-                    document.getElementById('funcionId').value = func.ID;
-                    document.getElementById('funcionNombre').value = func.Nombre;
-                    document.getElementById('funcionCategoria').value = func.Categoria;
-                    document.getElementById('funcionIcono').value = func.Icono || '';
-                    document.getElementById('funcionCodigo').value = func.Codigo_Plantilla;
-                    cargarPropiedadesEnFormulario(func.Propiedades);
-                    document.getElementById('formFuncionTitle').textContent = 'Editar Función';
-                }
-            }
-            
-            bootstrap.Modal.getInstance(document.getElementById('modalFunciones')).hide();
-            new bootstrap.Modal(document.getElementById('modalFormFuncion')).show();
-        }
-
         async function guardarFuncion() {
             const id = document.getElementById('funcionId').value;
-            const propiedades = obtenerPropiedades();
             
-            if (propiedades.length === 0) {
-                alert('Agrega al menos una propiedad');
+            if (selectedPropIds.length === 0) {
+                alert('Selecciona al menos una propiedad');
                 return;
             }
 
@@ -1208,7 +1356,7 @@
                 nombre: document.getElementById('funcionNombre').value,
                 categoria: document.getElementById('funcionCategoria').value,
                 icono: document.getElementById('funcionIcono').value || '',
-                propiedades: JSON.stringify(propiedades),
+                propiedadesIDs: selectedPropIds.join(','),
                 codigo_plantilla: document.getElementById('funcionCodigo').value
             };
             
@@ -1223,9 +1371,8 @@
             try {
                 await sendPostViaForm(payload);
                 bootstrap.Modal.getInstance(document.getElementById('modalFormFuncion')).hide();
-                showToast('Función guardada correctamente');
+                showToast('Función guardada');
             } catch (err) {
-                console.error(err);
                 showToast('Error al guardar', 'danger');
             } finally {
                 document.getElementById('loadingOverlay').classList.remove('active');
@@ -1241,7 +1388,6 @@
                 await sendPostViaForm({ action: 'borrar_funcion', id });
                 showToast('Función borrada');
             } catch (err) {
-                console.error(err);
                 showToast('Error al borrar', 'danger');
             } finally {
                 document.getElementById('loadingOverlay').classList.remove('active');
@@ -1326,7 +1472,6 @@
                 bootstrap.Modal.getInstance(document.getElementById('modalGuardarProyecto')).hide();
                 showToast('Proyecto guardado');
             } catch (err) {
-                console.error(err);
                 showToast('Error al guardar', 'danger');
             } finally {
                 document.getElementById('loadingOverlay').classList.remove('active');
@@ -1340,7 +1485,6 @@
                 await sendPostViaForm({ action: 'borrar_proyecto', id });
                 showToast('Proyecto borrado');
             } catch (err) {
-                console.error(err);
                 showToast('Error al borrar', 'danger');
             } finally {
                 document.getElementById('loadingOverlay').classList.remove('active');
