@@ -122,22 +122,22 @@
             border-right: 1px solid #444;
         }
 
-        /* Estilos para el hint de autocompletado */
         .CodeMirror-hints {
             background: #1e1f29;
             border: 1px solid #444;
             color: #f8f8f2;
+            font-family: 'Fira Code', monospace;
         }
         .CodeMirror-hint {
             color: #f8f8f2;
+            padding: 5px 10px;
         }
         .CodeMirror-hint-active {
             background: var(--turquesa);
             color: white;
         }
-        .cm-hint-func {
-            color: var(--celeste);
-        }
+        .cm-hint-func { color: var(--celeste); }
+        .cm-hint-tag { color: var(--naranja); }
 
         #blocklyDiv {
             height: 100%;
@@ -185,8 +185,8 @@
         .viewport-rect {
             fill: none;
             stroke: var(--rojo-atardecer);
-            stroke-width: 2;
-            stroke-dasharray: 8, 4;
+            stroke-width: 1;
+            stroke-dasharray: 5, 3;
             pointer-events: none;
         }
 
@@ -286,6 +286,54 @@
         .proyecto-item:hover {
             transform: translateX(3px);
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        /* Editor de propiedades mejorado */
+        .propiedad-item {
+            background: var(--blanco);
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            position: relative;
+        }
+
+        .propiedad-item .btn-eliminar {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: var(--rojo-atardecer);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .propiedad-item .btn-eliminar:hover {
+            background: #e04b50;
+        }
+
+        .btn-agregar-propiedad {
+            background: var(--celeste);
+            color: var(--turquesa);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn-agregar-propiedad:hover {
+            background: var(--turquesa);
+            color: white;
         }
     </style>
 </head>
@@ -422,17 +470,21 @@
                             <label class="form-label fw-semibold">Categoría</label>
                             <input type="text" class="form-control" id="funcionCategoria" placeholder="Ej: Formas, Texto, Filtros" required>
                         </div>
+                        
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Propiedades (JSON)</label>
-                            <textarea class="form-control font-monospace" id="funcionPropiedades" rows="5" 
-                                placeholder='[{"nombre":"x","tipo":"number","default":"0"},{"nombre":"fill","tipo":"color","default":"#000000"}]' required></textarea>
-                            <div class="form-text">Tipos: number, color, text. Usa $0 en el código plantilla para posicionar el cursor.</div>
+                            <label class="form-label fw-semibold">Propiedades</label>
+                            <div id="propiedadesContainer"></div>
+                            <button type="button" class="btn-agregar-propiedad" onclick="agregarPropiedad()">
+                                <i class="bi bi-plus-lg me-1"></i> Agregar Propiedad
+                            </button>
+                            <div class="form-text mt-2">Agrega las propiedades que tendrá tu función. Usa $0 en el código para posicionar el cursor.</div>
                         </div>
+                        
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Código Plantilla</label>
                             <textarea class="form-control font-monospace" id="funcionCodigo" rows="5" 
                                 placeholder='<rect x="{{x}}" y="{{y}}" width="{{width}}" height="{{height}}" fill="{{fill}}" />$0' required></textarea>
-                            <div class="form-text">Usa {{nombre_propiedad}} como placeholders. Añade $0 donde quieras que quede el cursor.</div>
+                            <div class="form-text">Usa {{nombre_propiedad}} para insertar los valores. Añade $0 donde quieras que quede el cursor.</div>
                         </div>
                     </form>
                 </div>
@@ -507,10 +559,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldgutter.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/xml-fold.min.js"></script>
     
-    <!-- XML Formatter -->
     <script src="https://cdn.jsdelivr.net/npm/xml-formatter@3.6.0/dist/browser/xml-formatter.min.js"></script>
-    
-    <!-- Blockly -->
     <script src="https://unpkg.com/blockly/blockly.min.js"></script>
 
     <script>
@@ -527,6 +576,7 @@
         let uidCounter = 0;
         let viewportVisible = true;
         let blocklyInitialized = false;
+        let propiedadCounter = 0;
 
         document.addEventListener('DOMContentLoaded', () => {
             initCodeMirror();
@@ -548,6 +598,10 @@
                 extraKeys: {
                     'Ctrl-Space': 'autocomplete',
                     'Alt-Space': 'autocomplete',
+                    'Tab': function(cm) {
+                        // Intentar autocompletar si hay sugerencias
+                        CodeMirror.commands.autocomplete(cm);
+                    },
                     'Ctrl-Shift-F': () => formatearCodigo()
                 }
             });
@@ -572,6 +626,7 @@
                         const newLine = change.from.line + lines.length - 1;
                         const newCh = (lines.length === 1 ? change.from.ch : 0) + indexInLastLine;
                         cm.setCursor(newLine, newCh);
+                        cm.focus();
                     }
                 }
             });
@@ -581,35 +636,81 @@
                 document.getElementById('cursorPosition').textContent = `Ln ${pos.line + 1}, Col ${pos.ch + 1}`;
             });
 
+            // Autocompletado mejorado
             CodeMirror.registerHelper('hint', 'xml', (editor) => {
                 const cur = editor.getCursor();
                 const token = editor.getTokenAt(cur);
+                const line = editor.getLine(cur.line);
                 const text = token.string;
                 const suggestions = [];
 
+                // Etiquetas SVG estándar
                 const svgTags = ['svg', 'rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon', 'path', 'text', 'g', 'defs', 'use', 'clipPath', 'mask', 'filter', 'linearGradient', 'radialGradient', 'stop', 'pattern', 'image'];
                 svgTags.forEach(tag => {
-                    if (tag.startsWith(text.toLowerCase()) || text === '') {
-                        suggestions.push({ text: `<${tag}></${tag}>`, displayText: tag, className: 'cm-hint-tag' });
-                    }
-                });
-
-                funciones.forEach(func => {
-                    const nombre = func.Nombre.toLowerCase();
-                    if (nombre.startsWith(text.toLowerCase()) || text === '') {
+                    if (tag.startsWith(text.toLowerCase()) || text === '' || text === '<') {
                         suggestions.push({ 
-                            text: func.Codigo_Plantilla, 
-                            displayText: `${func.Icono} ${func.Nombre} (${func.Categoria})`,
-                            className: 'cm-hint-func'
+                            text: `<${tag}></${tag}>`, 
+                            displayText: tag,
+                            className: 'cm-hint-tag',
+                            hint: function(cm, data, completion) {
+                                cm.replaceRange(completion.text, data.from, data.to);
+                                // Mover cursor entre las etiquetas
+                                const pos = cm.getCursor();
+                                cm.setCursor(pos.line, pos.ch - (tag.length + 3));
+                            }
                         });
                     }
                 });
+
+                // Funciones personalizadas - SIEMPRE disponibles
+                funciones.forEach(func => {
+                    const nombre = func.Nombre.toLowerCase();
+                    // Mostrar si el texto coincide o si está vacío
+                    if (text === '' || text === '<' || nombre.includes(text.toLowerCase())) {
+                        suggestions.push({ 
+                            text: func.Codigo_Plantilla, 
+                            displayText: `${func.Icono || '🔷'} ${func.Nombre}`,
+                            className: 'cm-hint-func',
+                            hint: function(cm, data, completion) {
+                                const inserted = completion.text;
+                                if (inserted.includes('$0')) {
+                                    const cleanInserted = inserted.replace('$0', '');
+                                    cm.replaceRange(cleanInserted, data.from, data.to);
+                                    
+                                    const lines = cleanInserted.split('\n');
+                                    const lastLine = lines[lines.length - 1];
+                                    const indexInLastLine = inserted.indexOf('$0');
+                                    
+                                    const newLine = data.from.line + lines.length - 1;
+                                    const newCh = (lines.length === 1 ? data.from.ch : 0) + indexInLastLine;
+                                    cm.setCursor(newLine, newCh);
+                                    cm.focus();
+                                } else {
+                                    cm.replaceRange(inserted, data.from, data.to);
+                                }
+                            }
+                        });
+                    }
+                });
+
+                if (suggestions.length === 0) {
+                    return null;
+                }
 
                 return {
                     list: suggestions,
                     from: CodeMirror.Pos(cur.line, token.start),
                     to: CodeMirror.Pos(cur.line, token.end)
                 };
+            });
+
+            // Auto-trigger autocomplete al escribir
+            codeEditor.on('inputRead', function(cm, change) {
+                if (change.origin === '+input' && change.text[0].match(/[a-zA-Z<]/)) {
+                    setTimeout(() => {
+                        CodeMirror.commands.autocomplete(cm, null, { completeSingle: false });
+                    }, 100);
+                }
             });
         }
 
@@ -623,7 +724,7 @@
                 grid: { spacing: 20, length: 3, colour: '#ccc', snap: true },
                 zoom: { controls: true, wheel: true, startScale: 0.8, maxScale: 2, minScale: 0.3 },
                 trashcan: true,
-                renderer: 'zelos' // Estilo Scratch 3.0
+                renderer: 'zelos'
             });
 
             blocklyWorkspace.addChangeListener(() => {
@@ -788,7 +889,7 @@
                     const funcId = this.getFieldValue('FUNC_ID');
                     const func = funciones.find(f => f.ID === funcId);
                     if (func) {
-                        this.appendDummyInput().appendField(`${func.Icono} ${func.Nombre}`);
+                        this.appendDummyInput().appendField(`${func.Icono || '🔷'} ${func.Nombre}`);
                         try {
                             const props = JSON.parse(func.Propiedades);
                             props.forEach(prop => {
@@ -888,7 +989,6 @@
                     const viewportRect = document.getElementById('viewportRect');
                     viewportRect.style.display = viewportVisible ? 'block' : 'none';
                     
-                    // Actualizar rectángulo del viewport a las dimensiones exactas
                     const vbParts = viewBox.split(' ').map(Number);
                     viewportRect.setAttribute('x', vbParts[0]);
                     viewportRect.setAttribute('y', vbParts[1]);
@@ -926,7 +1026,7 @@
                 el.addEventListener('mouseenter', () => {
                     const uid = el.getAttribute('data-uid');
                     resaltarEnCodigo(uid);
-                    el.style.filter = 'drop-shadow(0 0 5px #FB8500)';
+                    el.style.filter = 'drop-shadow(0 0 5px var(--naranja))';
                 });
                 el.addEventListener('mouseleave', () => {
                     quitarResaltadoCodigo();
@@ -986,9 +1086,8 @@
 
         function descargarImagen(formato) {
             const svgElement = document.getElementById('svgPreview');
-            const nombre = (document.getElementById('proyectoNombre').value || 'diseño').replace(/[^a-z0-9]/gi, '_').toLowerCase();
+            const nombre = (proyectoActual?.Nombre || document.getElementById('proyectoNombre').value || 'diseño').replace(/[^a-z0-9]/gi, '_').toLowerCase();
             
-            // Clonar para quitar el viewport rect de la exportación si se desea, o dejarlo
             const clone = svgElement.cloneNode(true);
             const viewportRect = clone.querySelector('.viewport-rect');
             if (viewportRect) viewportRect.remove();
@@ -1040,6 +1139,72 @@
             }
         }
 
+        // ============ GESTIÓN DE PROPIEDADES MEJORADA ============
+        function agregarPropiedad(nombre = '', tipo = 'number', defaultValue = '') {
+            propiedadCounter++;
+            const container = document.getElementById('propiedadesContainer');
+            const div = document.createElement('div');
+            div.className = 'propiedad-item';
+            div.id = `propiedad-${propiedadCounter}`;
+            
+            div.innerHTML = `
+                <button type="button" class="btn-eliminar" onclick="eliminarPropiedad(${propiedadCounter})" title="Eliminar">×</button>
+                <div class="row">
+                    <div class="col-md-4 mb-2">
+                        <label class="form-label small">Nombre</label>
+                        <input type="text" class="form-control form-control-sm prop-nombre" value="${nombre}" placeholder="Ej: x, y, fill" required>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <label class="form-label small">Tipo</label>
+                        <select class="form-select form-select-sm prop-tipo">
+                            <option value="number" ${tipo === 'number' ? 'selected' : ''}>Número</option>
+                            <option value="color" ${tipo === 'color' ? 'selected' : ''}>Color</option>
+                            <option value="text" ${tipo === 'text' ? 'selected' : ''}>Texto</option>
+                        </select>
+                    </div>
+                    <div class="col-md-5 mb-2">
+                        <label class="form-label small">Valor por defecto</label>
+                        <input type="text" class="form-control form-control-sm prop-default" value="${defaultValue}" placeholder="Ej: 0, #000000">
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(div);
+        }
+
+        function eliminarPropiedad(id) {
+            const elem = document.getElementById(`propiedad-${id}`);
+            if (elem) elem.remove();
+        }
+
+        function obtenerPropiedades() {
+            const props = [];
+            document.querySelectorAll('.propiedad-item').forEach(item => {
+                const nombre = item.querySelector('.prop-nombre').value.trim();
+                const tipo = item.querySelector('.prop-tipo').value;
+                const defaultValue = item.querySelector('.prop-default').value.trim();
+                
+                if (nombre) {
+                    props.push({ nombre, tipo, default: defaultValue });
+                }
+            });
+            return props;
+        }
+
+        function cargarPropiedadesEnFormulario(propiedadesJson) {
+            document.getElementById('propiedadesContainer').innerHTML = '';
+            if (propiedadesJson) {
+                try {
+                    const props = JSON.parse(propiedadesJson);
+                    props.forEach(p => {
+                        agregarPropiedad(p.nombre, p.tipo, p.default || '');
+                    });
+                } catch (e) {
+                    console.error('Error cargando propiedades:', e);
+                }
+            }
+        }
+
         // ============ FUNCIONES CRUD ============
         function openModalFunciones() {
             renderListaFunciones();
@@ -1056,7 +1221,7 @@
                 <div class="funcion-item">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <span class="funcion-nombre">${func.Icono} ${func.Nombre}</span>
+                            <span class="funcion-nombre">${func.Icono || '🔷'} ${func.Nombre}</span>
                             <span class="funcion-categoria ms-2">${func.Categoria}</span>
                         </div>
                         <div class="funcion-acciones">
@@ -1077,6 +1242,8 @@
             document.getElementById('formFuncion').reset();
             document.getElementById('funcionId').value = '';
             document.getElementById('formFuncionTitle').textContent = 'Nueva Función';
+            document.getElementById('propiedadesContainer').innerHTML = '';
+            propiedadCounter = 0;
 
             if (id) {
                 const func = funciones.find(f => f.ID === id);
@@ -1084,33 +1251,44 @@
                     document.getElementById('funcionId').value = func.ID;
                     document.getElementById('funcionNombre').value = func.Nombre;
                     document.getElementById('funcionCategoria').value = func.Categoria;
-                    document.getElementById('funcionIcono').value = func.Icono;
-                    document.getElementById('funcionPropiedades').value = func.Propiedades;
+                    document.getElementById('funcionIcono').value = func.Icono || '';
                     document.getElementById('funcionCodigo').value = func.Codigo_Plantilla;
+                    cargarPropiedadesEnFormulario(func.Propiedades);
                     document.getElementById('formFuncionTitle').textContent = 'Editar Función';
                 }
+            } else {
+                // Agregar propiedades de ejemplo por defecto
+                agregarPropiedad('x', 'number', '0');
+                agregarPropiedad('y', 'number', '0');
             }
+            
             bootstrap.Modal.getInstance(document.getElementById('modalFunciones')).hide();
             new bootstrap.Modal(document.getElementById('modalFormFuncion')).show();
         }
 
         async function guardarFuncion() {
             const id = document.getElementById('funcionId').value;
+            const propiedades = obtenerPropiedades();
+            
+            if (propiedades.length === 0) {
+                alert('Agrega al menos una propiedad');
+                return;
+            }
+
             const payload = {
                 action: id ? 'editar_funcion' : 'crear_funcion',
                 nombre: document.getElementById('funcionNombre').value,
                 categoria: document.getElementById('funcionCategoria').value,
                 icono: document.getElementById('funcionIcono').value || '',
-                propiedades: document.getElementById('funcionPropiedades').value,
+                propiedades: JSON.stringify(propiedades),
                 codigo_plantilla: document.getElementById('funcionCodigo').value
             };
+            
             if (id) payload.id = id;
 
-            try { JSON.parse(payload.propiedades); } 
-            catch (e) { alert('Las propiedades deben ser un JSON válido'); return; }
-
             if (!payload.nombre || !payload.categoria || !payload.codigo_plantilla) {
-                alert('Completa todos los campos obligatorios'); return;
+                alert('Completa todos los campos obligatorios');
+                return;
             }
 
             document.getElementById('loadingOverlay').classList.add('active');
