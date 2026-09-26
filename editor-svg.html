@@ -63,7 +63,6 @@
         .btn-nav-orange { background-color: var(--naranja); }
         .btn-nav-orange:hover { background-color: #e07500; color: white; }
 
-        /* Layout principal */
         .editor-container {
             display: flex;
             height: calc(100vh - 56px);
@@ -84,7 +83,6 @@
             background: var(--blanco);
         }
 
-        /* Tabs del panel izquierdo */
         .editor-tabs {
             display: flex;
             background: #1e1f29;
@@ -112,7 +110,6 @@
 
         .editor-tab i { margin-right: 5px; }
 
-        /* CodeMirror */
         .CodeMirror {
             height: 100% !important;
             font-size: 14px;
@@ -124,17 +121,11 @@
             border-right: 1px solid #444;
         }
 
-        /* Blockly */
         #blocklyDiv {
             height: 100%;
             width: 100%;
         }
 
-        .blocklyToolboxDiv {
-            background-color: #1e1f29 !important;
-        }
-
-        /* Preview */
         .preview-header {
             background: var(--blanco);
             padding: 10px 15px;
@@ -190,7 +181,6 @@
             filter: drop-shadow(0 0 3px var(--naranja));
         }
 
-        /* Status bar */
         .status-bar {
             background: var(--turquesa);
             color: white;
@@ -200,7 +190,6 @@
             justify-content: space-between;
         }
 
-        /* Modales */
         .modal-content { border-radius: 15px; border: none; }
         .modal-header {
             background-color: var(--turquesa);
@@ -218,7 +207,6 @@
         }
         .btn-save:hover { background-color: var(--celeste); color: var(--turquesa); }
 
-        /* Lista de funciones en modal */
         .funcion-item {
             background: var(--amarillo-hueso);
             border-radius: 10px;
@@ -262,12 +250,11 @@
             border: none;
         }
 
-        /* Loading */
         .loading-overlay {
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background: rgba(244, 241, 222, 0.9);
+            background: rgba(244, 241, 222, 0.95);
             display: none;
             justify-content: center;
             align-items: center;
@@ -284,7 +271,6 @@
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Toast */
         .toast-container {
             position: fixed;
             top: 70px;
@@ -292,12 +278,10 @@
             z-index: 9998;
         }
 
-        /* Resaltado en CodeMirror */
         .cm-highlight-line {
             background: rgba(251, 133, 0, 0.3) !important;
         }
 
-        /* Proyecto selector */
         .proyecto-item {
             background: var(--amarillo-hueso);
             border-radius: 10px;
@@ -315,16 +299,13 @@
 </head>
 <body>
 
-    <!-- Loading -->
     <div class="loading-overlay" id="loadingOverlay">
         <div class="spinner"></div>
         <p class="mt-3 mb-0 fw-semibold" style="color: var(--turquesa);">Sincronizando...</p>
     </div>
 
-    <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <!-- Navbar -->
     <nav class="navbar navbar-editor">
         <div class="container-fluid px-3">
             <a class="navbar-brand" href="index.html">
@@ -345,9 +326,7 @@
         </div>
     </nav>
 
-    <!-- Editor Container -->
     <div class="editor-container">
-        <!-- Panel Izquierdo: Código / Bloques -->
         <div class="panel-izquierdo">
             <div class="editor-tabs">
                 <button class="editor-tab active" id="tabCodigo" onclick="cambiarTab('codigo')">
@@ -370,7 +349,6 @@
             </div>
         </div>
 
-        <!-- Panel Derecho: Preview -->
         <div class="panel-derecho">
             <div class="preview-header">
                 <h6 class="preview-title"><i class="bi bi-eye me-2"></i>Vista Previa</h6>
@@ -431,7 +409,7 @@
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label class="form-label fw-semibold">Icono</label>
-                                <input type="text" class="form-control" id="funcionIcono" placeholder="🔷" maxlength="2">
+                                <input type="text" class="form-control" id="funcionIcono" placeholder="" maxlength="2">
                             </div>
                         </div>
                         <div class="mb-3">
@@ -447,7 +425,7 @@
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Código Plantilla</label>
                             <textarea class="form-control font-monospace" id="funcionCodigo" rows="5" 
-                                placeholder='&lt;rect x="{{x}}" y="{{y}}" width="{{width}}" height="{{height}}" fill="{{fill}}" /&gt;' required></textarea>
+                                placeholder='<rect x="{{x}}" y="{{y}}" width="{{width}}" height="{{height}}" fill="{{fill}}" />' required></textarea>
                             <div class="form-text">Usa {{nombre_propiedad}} como placeholders</div>
                         </div>
                     </form>
@@ -511,7 +489,6 @@
         </div>
     </div>
 
-    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
@@ -523,17 +500,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldgutter.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/xml-fold.min.js"></script>
     
-    <!-- Blockly -->
     <script src="https://unpkg.com/blockly/blockly.min.js"></script>
 
     <script>
-        // ============ CONFIGURACIÓN ============
         const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyBV08riD60M5B1kNXWEFeMBqqO3TR6as4xyrGhf8JBCEERikhQQ6pMBkGy-nCl-edegg/exec';
         const STORAGE_KEY_FUNCIONES = 'nexusboard_svg_funciones';
         const STORAGE_KEY_PROYECTOS = 'nexusboard_svg_proyectos';
         const STORAGE_KEY_PROYECTO_ACTUAL = 'nexusboard_svg_proyecto_actual';
 
-        // ============ ESTADO GLOBAL ============
         let funciones = [];
         let proyectos = [];
         let proyectoActual = null;
@@ -542,7 +516,6 @@
         let uidCounter = 0;
         let viewportVisible = false;
 
-        // ============ INICIALIZACIÓN ============
         document.addEventListener('DOMContentLoaded', () => {
             initCodeMirror();
             initBlockly();
@@ -573,14 +546,12 @@
                 document.getElementById('cursorPosition').textContent = `Ln ${pos.line + 1}, Col ${pos.ch + 1}`;
             });
 
-            // Autocompletado personalizado
             CodeMirror.registerHelper('hint', 'xml', (editor) => {
                 const cur = editor.getCursor();
                 const token = editor.getTokenAt(cur);
                 const text = token.string;
                 const suggestions = [];
 
-                // Etiquetas SVG estándar
                 const svgTags = ['svg', 'rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon', 'path', 'text', 'g', 'defs', 'use', 'clipPath', 'mask', 'filter', 'linearGradient', 'radialGradient', 'stop', 'pattern', 'image'];
                 svgTags.forEach(tag => {
                     if (tag.startsWith(text.toLowerCase()) || text === '') {
@@ -588,7 +559,6 @@
                     }
                 });
 
-                // Funciones personalizadas
                 funciones.forEach(func => {
                     const nombre = func.Nombre.toLowerCase();
                     if (nombre.startsWith(text.toLowerCase()) || text === '') {
@@ -623,8 +593,11 @@
             });
         }
 
-        // ============ CARGA DE DATOS ============
-        function cargarDatos() {
+        // ============ CARGA DE DATOS CON FETCH CORRECTO ============
+        async function cargarDatos() {
+            document.getElementById('loadingOverlay').classList.add('active');
+
+            // Carga local primero
             const localFunc = localStorage.getItem(STORAGE_KEY_FUNCIONES);
             const localProy = localStorage.getItem(STORAGE_KEY_PROYECTOS);
             const localActual = localStorage.getItem(STORAGE_KEY_PROYECTO_ACTUAL);
@@ -639,35 +612,82 @@
                 cargarProyectoEnEditor(proyectoActual);
             }
 
-            // Sincronizar con Sheets
-            Promise.all([
-                fetch(APPS_SCRIPT_URL + '?tipo=funciones').then(r => r.json()),
-                fetch(APPS_SCRIPT_URL + '?tipo=proyectos').then(r => r.json())
-            ]).then(([resFunc, resProy]) => {
-                if (resFunc.status === 'success') {
-                    funciones = resFunc.data;
-                    localStorage.setItem(STORAGE_KEY_FUNCIONES, JSON.stringify(funciones));
-                    actualizarToolbox();
+            // Sincronización con servidor (GET sin no-cors)
+            try {
+                const [resFunc, resProy] = await Promise.all([
+                    fetch(APPS_SCRIPT_URL + '?tipo=funciones', { method: 'GET', redirect: 'follow' }),
+                    fetch(APPS_SCRIPT_URL + '?tipo=proyectos', { method: 'GET', redirect: 'follow' })
+                ]);
+
+                if (resFunc.ok) {
+                    const dataFunc = await resFunc.json();
+                    if (dataFunc.status === 'success') {
+                        funciones = dataFunc.data;
+                        localStorage.setItem(STORAGE_KEY_FUNCIONES, JSON.stringify(funciones));
+                        actualizarToolbox();
+                    }
                 }
-                if (resProy.status === 'success') {
-                    proyectos = resProy.data;
-                    localStorage.setItem(STORAGE_KEY_PROYECTOS, JSON.stringify(proyectos));
+
+                if (resProy.ok) {
+                    const dataProy = await resProy.json();
+                    if (dataProy.status === 'success') {
+                        proyectos = dataProy.data;
+                        localStorage.setItem(STORAGE_KEY_PROYECTOS, JSON.stringify(proyectos));
+                    }
                 }
-                document.getElementById('loadingOverlay').classList.remove('active');
-            }).catch(err => {
-                console.error('Error cargando datos:', err);
-                document.getElementById('loadingOverlay').classList.remove('active');
-            });
+            } catch (error) {
+                console.error('Error cargando datos:', error);
+                showToast('Error de sincronización, usando datos locales', 'warning');
+            }
+
+            document.getElementById('loadingOverlay').classList.remove('active');
         }
 
-        function sendToAppsScript(payload) {
-            return new Promise((resolve, reject) => {
-                const formData = new FormData();
-                formData.append('data', JSON.stringify(payload));
-                fetch(APPS_SCRIPT_URL, { method: 'POST', body: formData, redirect: 'follow' })
-                    .then(r => r.json())
-                    .then(resolve)
-                    .catch(reject);
+        // ============ POST VIA FORMULARIO + IFRAME ============
+        function sendPostViaForm(payload) {
+            return new Promise((resolve) => {
+                const iframe = document.createElement('iframe');
+                iframe.name = 'hidden_post_frame_' + Date.now();
+                iframe.style.display = 'none';
+                
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = APPS_SCRIPT_URL;
+                form.target = iframe.name;
+                form.style.display = 'none';
+                
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'data';
+                input.value = JSON.stringify(payload);
+                
+                form.appendChild(input);
+                document.body.appendChild(iframe);
+                document.body.appendChild(form);
+                
+                let resolved = false;
+                
+                iframe.onload = function() {
+                    if (!resolved) {
+                        resolved = true;
+                        setTimeout(() => {
+                            cargarDatos().then(() => {
+                                resolve({ status: 'success' });
+                            });
+                        }, 1500);
+                    }
+                };
+                
+                form.submit();
+                
+                setTimeout(() => {
+                    if (!resolved) {
+                        resolved = true;
+                        cargarDatos().then(() => resolve({ status: 'success' }));
+                    }
+                    if (form.parentNode) document.body.removeChild(form);
+                    if (iframe.parentNode) document.body.removeChild(iframe);
+                }, 8000);
             });
         }
 
@@ -712,7 +732,6 @@
                 blocklyWorkspace.updateToolbox(document.getElementById('toolbox'));
             }
 
-            // Registrar el bloque dinámicamente
             if (!Blockly.Blocks['funcion_svg']) {
                 Blockly.Blocks['funcion_svg'] = {
                     init: function() {
@@ -758,11 +777,7 @@
                         codigo = codigo.replace(regex, valor.replace(/"/g, ''));
                     });
                     
-                    // Agregar UID
-                    codigo = codigo.replace('<', `<data-uid="${uid}" `).replace('<svg ', `<svg data-uid="${uid}" `);
-                    if (!codigo.includes('data-uid')) {
-                        codigo = codigo.replace(/<([a-z]+)/i, `<$1 data-uid="${uid}"`);
-                    }
+                    codigo = codigo.replace(/<([a-z]+)/i, `<$1 data-uid="${uid}"`);
                     
                     return codigo + '\n';
                 };
@@ -774,7 +789,6 @@
             return colors[cat] || '#219EBC';
         }
 
-        // ============ GENERACIÓN DE CÓDIGO ============
         function generarCodigoDesdeBloques() {
             const codigo = Blockly.JavaScript.workspaceToCode(blocklyWorkspace);
             if (codigo && codigo.trim()) {
@@ -783,13 +797,11 @@
             }
         }
 
-        // ============ PREVIEW ============
         function actualizarPreview() {
             const codigo = codeEditor.getValue();
             const svgPreview = document.getElementById('svgPreview');
             
             try {
-                // Extraer contenido SVG
                 let svgContent = codigo;
                 const svgMatch = codigo.match(/<svg[\s\S]*?<\/svg>/i);
                 if (svgMatch) {
@@ -798,7 +810,6 @@
                     svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">${codigo}</svg>`;
                 }
 
-                // Parsear y agregar event listeners
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(svgContent, 'image/svg+xml');
                 const svgEl = doc.querySelector('svg');
@@ -810,12 +821,10 @@
                     svgPreview.setAttribute('height', height);
                     svgPreview.setAttribute('viewBox', svgEl.getAttribute('viewBox') || `0 0 ${width} ${height}`);
                     
-                    // Limpiar contenido anterior (mantener viewport rect)
                     const viewportRect = document.getElementById('viewportRect');
                     svgPreview.innerHTML = '';
                     svgPreview.appendChild(viewportRect);
                     
-                    // Copiar elementos
                     while (svgEl.firstChild) {
                         if (svgEl.firstChild.tagName !== 'svg') {
                             svgPreview.appendChild(svgEl.firstChild);
@@ -827,7 +836,6 @@
                         }
                     }
 
-                    // Agregar hover events
                     agregarHoverEvents();
                     document.getElementById('elementCount').textContent = `Elementos: ${svgPreview.children.length - 1}`;
                     document.getElementById('svgInfo').textContent = `SVG: ${width} x ${height}`;
@@ -875,7 +883,6 @@
             }
         }
 
-        // ============ VIEWPORT ============
         function toggleViewport() {
             viewportVisible = !viewportVisible;
             document.getElementById('viewportRect').style.display = viewportVisible ? 'block' : 'none';
@@ -948,7 +955,7 @@
             new bootstrap.Modal(document.getElementById('modalFormFuncion')).show();
         }
 
-        function guardarFuncion() {
+        async function guardarFuncion() {
             const id = document.getElementById('funcionId').value;
             const payload = {
                 action: id ? 'editar_funcion' : 'crear_funcion',
@@ -961,7 +968,6 @@
 
             if (id) payload.id = id;
 
-            // Validar JSON de propiedades
             try {
                 JSON.parse(payload.propiedades);
             } catch (e) {
@@ -975,33 +981,37 @@
             }
 
             document.getElementById('loadingOverlay').classList.add('active');
-            sendToAppsScript(payload).then(result => {
-                document.getElementById('loadingOverlay').classList.remove('active');
-                if (result.status === 'success') {
-                    bootstrap.Modal.getInstance(document.getElementById('modalFormFuncion')).hide();
-                    cargarDatos();
-                    showToast('Función guardada correctamente');
-                }
-            }).catch(err => {
-                document.getElementById('loadingOverlay').classList.remove('active');
+            
+            try {
+                await sendPostViaForm(payload);
+                bootstrap.Modal.getInstance(document.getElementById('modalFormFuncion')).hide();
+                showToast('Función guardada correctamente');
+            } catch (err) {
                 console.error(err);
-            });
+                showToast('Error al guardar la función', 'danger');
+            } finally {
+                document.getElementById('loadingOverlay').classList.remove('active');
+            }
         }
 
         function editarFuncion(id) {
             openFormFuncion(id);
         }
 
-        function borrarFuncion(id) {
+        async function borrarFuncion(id) {
             if (!confirm('¿Borrar esta función?')) return;
+            
             document.getElementById('loadingOverlay').classList.add('active');
-            sendToAppsScript({ action: 'borrar_funcion', id }).then(result => {
+            
+            try {
+                await sendPostViaForm({ action: 'borrar_funcion', id });
+                showToast('Función borrada');
+            } catch (err) {
+                console.error(err);
+                showToast('Error al borrar', 'danger');
+            } finally {
                 document.getElementById('loadingOverlay').classList.remove('active');
-                if (result.status === 'success') {
-                    cargarDatos();
-                    showToast('Función borrada');
-                }
-            });
+            }
         }
 
         // ============ PROYECTOS ============
@@ -1067,7 +1077,7 @@
             new bootstrap.Modal(document.getElementById('modalGuardarProyecto')).show();
         }
 
-        function confirmarGuardarProyecto() {
+        async function confirmarGuardarProyecto() {
             const payload = {
                 action: 'guardar_proyecto',
                 id: document.getElementById('proyectoId').value || undefined,
@@ -1078,24 +1088,33 @@
             };
 
             document.getElementById('loadingOverlay').classList.add('active');
-            sendToAppsScript(payload).then(result => {
+            
+            try {
+                await sendPostViaForm(payload);
+                bootstrap.Modal.getInstance(document.getElementById('modalGuardarProyecto')).hide();
+                showToast('Proyecto guardado');
+            } catch (err) {
+                console.error(err);
+                showToast('Error al guardar', 'danger');
+            } finally {
                 document.getElementById('loadingOverlay').classList.remove('active');
-                if (result.status === 'success') {
-                    bootstrap.Modal.getInstance(document.getElementById('modalGuardarProyecto')).hide();
-                    cargarDatos();
-                    showToast('Proyecto guardado');
-                }
-            });
+            }
         }
 
-        function borrarProyecto(id) {
+        async function borrarProyecto(id) {
             if (!confirm('¿Borrar este proyecto?')) return;
-            sendToAppsScript({ action: 'borrar_proyecto', id }).then(result => {
-                if (result.status === 'success') {
-                    cargarDatos();
-                    showToast('Proyecto borrado');
-                }
-            });
+            
+            document.getElementById('loadingOverlay').classList.add('active');
+            
+            try {
+                await sendPostViaForm({ action: 'borrar_proyecto', id });
+                showToast('Proyecto borrado');
+            } catch (err) {
+                console.error(err);
+                showToast('Error al borrar', 'danger');
+            } finally {
+                document.getElementById('loadingOverlay').classList.remove('active');
+            }
         }
 
         // ============ UTILIDADES ============
@@ -1104,17 +1123,21 @@
             document.getElementById('statusInfo').textContent = codigo ? 'Editando...' : 'Vacío';
         }
 
-        function showToast(msg) {
+        function showToast(message, type = 'success') {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
             toast.className = 'toast show';
             toast.setAttribute('role', 'alert');
+            
+            const bgClass = type === 'danger' ? 'bg-danger' : type === 'warning' ? 'bg-warning' : 'bg-success';
+            const textColor = type === 'warning' ? 'text-dark' : 'text-white';
+            
             toast.innerHTML = `
-                <div class="toast-header" style="background: var(--turquesa); color: white;">
+                <div class="toast-header ${bgClass} ${textColor}">
                     <strong class="me-auto">NexusBoard</strong>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                    <button type="button" class="btn-close ${textColor === 'text-dark' ? '' : 'btn-close-white'}" data-bs-dismiss="toast"></button>
                 </div>
-                <div class="toast-body">${msg}</div>
+                <div class="toast-body">${message}</div>
             `;
             container.appendChild(toast);
             setTimeout(() => toast.remove(), 3000);
