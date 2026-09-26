@@ -46,6 +46,7 @@
             font-weight: 800;
             font-size: 1.3rem;
             color: var(--turquesa) !important;
+            text-decoration: none;
         }
 
         .navbar-brand span { color: var(--rojo-atardecer); }
@@ -121,6 +122,23 @@
             border-right: 1px solid #444;
         }
 
+        /* Estilos para el hint de autocompletado */
+        .CodeMirror-hints {
+            background: #1e1f29;
+            border: 1px solid #444;
+            color: #f8f8f2;
+        }
+        .CodeMirror-hint {
+            color: #f8f8f2;
+        }
+        .CodeMirror-hint-active {
+            background: var(--turquesa);
+            color: white;
+        }
+        .cm-hint-func {
+            color: var(--celeste);
+        }
+
         #blocklyDiv {
             height: 100%;
             width: 100%;
@@ -178,7 +196,7 @@
         }
 
         .svg-element:hover {
-            filter: drop-shadow(0 0 3px var(--naranja));
+            filter: drop-shadow(0 0 5px var(--naranja));
         }
 
         .status-bar {
@@ -221,11 +239,7 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
-        .funcion-item .funcion-nombre {
-            font-weight: 700;
-            color: var(--turquesa);
-        }
-
+        .funcion-item .funcion-nombre { font-weight: 700; color: var(--turquesa); }
         .funcion-item .funcion-categoria {
             font-size: 0.75rem;
             background: var(--lila);
@@ -233,33 +247,19 @@
             padding: 2px 8px;
             border-radius: 10px;
         }
-
-        .funcion-item .funcion-acciones {
-            display: flex;
-            gap: 5px;
-        }
+        .funcion-item .funcion-acciones { display: flex; gap: 5px; }
 
         .btn-icon {
-            width: 32px;
-            height: 32px;
-            padding: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            border: none;
+            width: 32px; height: 32px; padding: 0;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%; border: none;
         }
 
         .loading-overlay {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(244, 241, 222, 0.95);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            flex-direction: column;
+            display: none; justify-content: center; align-items: center;
+            z-index: 9999; flex-direction: column;
         }
         .loading-overlay.active { display: flex; }
         .spinner {
@@ -271,16 +271,8 @@
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        .toast-container {
-            position: fixed;
-            top: 70px;
-            right: 20px;
-            z-index: 9998;
-        }
-
-        .cm-highlight-line {
-            background: rgba(251, 133, 0, 0.3) !important;
-        }
+        .toast-container { position: fixed; top: 70px; right: 20px; z-index: 9998; }
+        .cm-highlight-line { background: rgba(251, 133, 0, 0.3) !important; }
 
         .proyecto-item {
             background: var(--amarillo-hueso);
@@ -312,7 +304,19 @@
                 <i class="bi bi-arrow-left me-2"></i>Nexus<span>Board</span>
             </a>
             <div class="d-flex align-items-center">
-                <span class="me-3 fw-semibold" style="color: var(--gris);" id="projectNameDisplay">Sin proyecto</span>
+                <span class="me-3 fw-semibold text-truncate" style="color: var(--gris); max-width: 150px;" id="projectNameDisplay">Sin proyecto</span>
+                
+                <div class="dropdown me-2">
+                    <button class="btn btn-nav dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-download me-1"></i> Descargar
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" onclick="descargarImagen('svg')"><i class="bi bi-filetype-svg me-2"></i>SVG</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="descargarImagen('png')"><i class="bi bi-filetype-png me-2"></i>PNG</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="descargarImagen('jpg')"><i class="bi bi-filetype-jpg me-2"></i>JPG</a></li>
+                    </ul>
+                </div>
+
                 <button class="btn btn-nav" onclick="openModalFunciones()">
                     <i class="bi bi-puzzle me-1"></i> Funciones
                 </button>
@@ -352,6 +356,9 @@
             <div class="preview-header">
                 <h6 class="preview-title"><i class="bi bi-eye me-2"></i>Vista Previa</h6>
                 <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-secondary" onclick="formatearCodigo()" title="Formatear código (Varita Mágica)">
+                        <i class="bi bi-magic"></i> Formatear
+                    </button>
                     <button class="btn btn-sm btn-outline-secondary" onclick="toggleViewport()">
                         <i class="bi bi-bounding-box"></i> Viewport
                     </button>
@@ -361,8 +368,8 @@
                 </div>
             </div>
             <div class="preview-container" id="previewContainer">
-                <svg id="svgPreview" xmlns="http://www.w3.org/2000/svg">
-                    <rect class="viewport-rect" id="viewportRect" x="0" y="0" width="800" height="600" style="display: none;"></rect>
+                <svg id="svgPreview" xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+                    <rect class="viewport-rect" id="viewportRect" x="0" y="0" width="800" height="600" style="display: block;"></rect>
                 </svg>
             </div>
             <div class="status-bar">
@@ -408,7 +415,7 @@
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label class="form-label fw-semibold">Icono</label>
-                                <input type="text" class="form-control" id="funcionIcono" placeholder="" maxlength="2">
+                                <input type="text" class="form-control" id="funcionIcono" placeholder="🔷" maxlength="2">
                             </div>
                         </div>
                         <div class="mb-3">
@@ -419,13 +426,13 @@
                             <label class="form-label fw-semibold">Propiedades (JSON)</label>
                             <textarea class="form-control font-monospace" id="funcionPropiedades" rows="5" 
                                 placeholder='[{"nombre":"x","tipo":"number","default":"0"},{"nombre":"fill","tipo":"color","default":"#000000"}]' required></textarea>
-                            <div class="form-text">Define las propiedades que tendrá el bloque. Tipos: number, color, text, select</div>
+                            <div class="form-text">Tipos: number, color, text. Usa $0 en el código plantilla para posicionar el cursor.</div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Código Plantilla</label>
                             <textarea class="form-control font-monospace" id="funcionCodigo" rows="5" 
-                                placeholder='<rect x="{{x}}" y="{{y}}" width="{{width}}" height="{{height}}" fill="{{fill}}" />' required></textarea>
-                            <div class="form-text">Usa {{nombre_propiedad}} como placeholders</div>
+                                placeholder='<rect x="{{x}}" y="{{y}}" width="{{width}}" height="{{height}}" fill="{{fill}}" />$0' required></textarea>
+                            <div class="form-text">Usa {{nombre_propiedad}} como placeholders. Añade $0 donde quieras que quede el cursor.</div>
                         </div>
                     </form>
                 </div>
@@ -488,6 +495,7 @@
         </div>
     </div>
 
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
@@ -499,6 +507,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldgutter.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/xml-fold.min.js"></script>
     
+    <!-- XML Formatter -->
+    <script src="https://cdn.jsdelivr.net/npm/xml-formatter@3.6.0/dist/browser/xml-formatter.min.js"></script>
+    
+    <!-- Blockly -->
     <script src="https://unpkg.com/blockly/blockly.min.js"></script>
 
     <script>
@@ -513,7 +525,7 @@
         let codeEditor = null;
         let blocklyWorkspace = null;
         let uidCounter = 0;
-        let viewportVisible = false;
+        let viewportVisible = true;
         let blocklyInitialized = false;
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -532,12 +544,36 @@
                 gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter'],
                 lineWrapping: true,
                 indentUnit: 2,
-                tabSize: 2
+                tabSize: 2,
+                extraKeys: {
+                    'Ctrl-Space': 'autocomplete',
+                    'Alt-Space': 'autocomplete',
+                    'Ctrl-Shift-F': () => formatearCodigo()
+                }
             });
 
-            codeEditor.on('change', () => {
+            codeEditor.on('change', (cm, change) => {
                 actualizarPreview();
                 actualizarEstado();
+                
+                // Manejar $0 en autocompletado
+                if (change.origin === 'complete') {
+                    const inserted = change.text.join('\n');
+                    if (inserted.includes('$0')) {
+                        const lines = inserted.split('\n');
+                        const lastLine = lines[lines.length - 1];
+                        const indexInLastLine = lastLine.indexOf('$0');
+                        const cleanInserted = inserted.replace('$0', '');
+                        
+                        const from = { line: change.from.line, ch: change.from.ch };
+                        const to = { line: change.to.line, ch: change.to.ch };
+                        cm.replaceRange(cleanInserted, from, to);
+                        
+                        const newLine = change.from.line + lines.length - 1;
+                        const newCh = (lines.length === 1 ? change.from.ch : 0) + indexInLastLine;
+                        cm.setCursor(newLine, newCh);
+                    }
+                }
             });
 
             codeEditor.on('cursorActivity', () => {
@@ -554,14 +590,18 @@
                 const svgTags = ['svg', 'rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon', 'path', 'text', 'g', 'defs', 'use', 'clipPath', 'mask', 'filter', 'linearGradient', 'radialGradient', 'stop', 'pattern', 'image'];
                 svgTags.forEach(tag => {
                     if (tag.startsWith(text.toLowerCase()) || text === '') {
-                        suggestions.push({ text: `<${tag}></${tag}>`, displayText: tag });
+                        suggestions.push({ text: `<${tag}></${tag}>`, displayText: tag, className: 'cm-hint-tag' });
                     }
                 });
 
                 funciones.forEach(func => {
                     const nombre = func.Nombre.toLowerCase();
                     if (nombre.startsWith(text.toLowerCase()) || text === '') {
-                        suggestions.push({ text: func.Codigo_Plantilla, displayText: `${func.Icono} ${func.Nombre} (${func.Categoria})` });
+                        suggestions.push({ 
+                            text: func.Codigo_Plantilla, 
+                            displayText: `${func.Icono} ${func.Nombre} (${func.Categoria})`,
+                            className: 'cm-hint-func'
+                        });
                     }
                 });
 
@@ -571,14 +611,8 @@
                     to: CodeMirror.Pos(cur.line, token.end)
                 };
             });
-
-            codeEditor.setOption('extraKeys', {
-                'Ctrl-Space': 'autocomplete',
-                'Alt-Space': 'autocomplete'
-            });
         }
 
-        // Inicializar Blockly DESPUÉS de cargar las funciones
         function initBlockly() {
             if (blocklyInitialized) return;
             
@@ -588,7 +622,8 @@
                 toolbox: toolboxXml,
                 grid: { spacing: 20, length: 3, colour: '#ccc', snap: true },
                 zoom: { controls: true, wheel: true, startScale: 0.8, maxScale: 2, minScale: 0.3 },
-                trashcan: true
+                trashcan: true,
+                renderer: 'zelos' // Estilo Scratch 3.0
             });
 
             blocklyWorkspace.addChangeListener(() => {
@@ -598,7 +633,6 @@
             blocklyInitialized = true;
         }
 
-        // Generar XML del toolbox
         function generateToolboxXml() {
             const categorias = {};
             funciones.forEach(func => {
@@ -618,7 +652,6 @@
                 toolboxXml += '</category>';
             });
             
-            // Si no hay categorías, agregar una vacía para evitar el error
             if (Object.keys(categorias).length === 0) {
                 toolboxXml += '<category name="General" colour="#219EBC"></category>';
             }
@@ -627,45 +660,35 @@
             return toolboxXml;
         }
 
-        // Actualizar toolbox cuando cambian las funciones
         function actualizarToolbox() {
             if (!blocklyWorkspace) {
                 initBlockly();
                 return;
             }
-
             const toolboxXml = generateToolboxXml();
-            
             try {
                 blocklyWorkspace.updateToolbox(toolboxXml);
             } catch (error) {
-                console.error('Error actualizando toolbox:', error);
-                // Si falla, recrear el workspace
                 blocklyWorkspace.dispose();
                 blocklyInitialized = false;
                 initBlockly();
             }
         }
 
-        // ============ CARGA DE DATOS ============
         async function cargarDatos() {
             document.getElementById('loadingOverlay').classList.add('active');
 
-            // Carga local primero
             const localFunc = localStorage.getItem(STORAGE_KEY_FUNCIONES);
             const localProy = localStorage.getItem(STORAGE_KEY_PROYECTOS);
             const localActual = localStorage.getItem(STORAGE_KEY_PROYECTO_ACTUAL);
 
-            if (localFunc) {
-                funciones = JSON.parse(localFunc);
-            }
+            if (localFunc) funciones = JSON.parse(localFunc);
             if (localProy) proyectos = JSON.parse(localProy);
             if (localActual) {
                 proyectoActual = JSON.parse(localActual);
                 cargarProyectoEnEditor(proyectoActual);
             }
 
-            // Sincronización con servidor
             try {
                 const [resFunc, resProy] = await Promise.all([
                     fetch(APPS_SCRIPT_URL + '?tipo=funciones', { method: 'GET', redirect: 'follow' }),
@@ -688,21 +711,17 @@
                     }
                 }
 
-                // Inicializar Blockly después de cargar funciones
                 actualizarToolbox();
-                
                 showToast('Sincronizado correctamente');
             } catch (error) {
                 console.error('Error cargando datos:', error);
                 showToast('Error de sincronización, usando datos locales', 'warning');
-                // Aún así inicializar Blockly con datos locales
                 actualizarToolbox();
             }
 
             document.getElementById('loadingOverlay').classList.remove('active');
         }
 
-        // ============ POST VIA FORMULARIO + IFRAME ============
         function sendPostViaForm(payload) {
             return new Promise((resolve) => {
                 const iframe = document.createElement('iframe');
@@ -725,18 +744,14 @@
                 document.body.appendChild(form);
                 
                 let resolved = false;
-                
                 iframe.onload = function() {
                     if (!resolved) {
                         resolved = true;
                         setTimeout(() => {
-                            cargarDatos().then(() => {
-                                resolve({ status: 'success' });
-                            });
+                            cargarDatos().then(() => resolve({ status: 'success' }));
                         }, 1500);
                     }
                 };
-                
                 form.submit();
                 
                 setTimeout(() => {
@@ -750,7 +765,6 @@
             });
         }
 
-        // ============ TABS ============
         function cambiarTab(tab) {
             document.getElementById('tabCodigo').classList.toggle('active', tab === 'codigo');
             document.getElementById('tabBloques').classList.toggle('active', tab === 'bloques');
@@ -761,14 +775,11 @@
                 setTimeout(() => codeEditor.refresh(), 100);
             } else {
                 setTimeout(() => {
-                    if (blocklyWorkspace) {
-                        Blockly.svgResize(blocklyWorkspace);
-                    }
+                    if (blocklyWorkspace) Blockly.svgResize(blocklyWorkspace);
                 }, 100);
             }
         }
 
-        // ============ REGISTRO DE BLOQUE PERSONALIZADO ============
         function registerBlocklyBlock() {
             if (Blockly.Blocks['funcion_svg']) return;
 
@@ -797,8 +808,8 @@
                         } catch (e) {
                             console.error('Error parseando propiedades:', e);
                         }
-                        this.setPreviousStatement(true);
-                        this.setNextStatement(true);
+                        this.setPreviousStatement(true, null);
+                        this.setNextStatement(true, null);
                         this.setColour(getColorCategoria(func.Categoria));
                         this.setTooltip(func.Codigo_Plantilla);
                     }
@@ -822,7 +833,6 @@
                     });
                     
                     codigo = codigo.replace(/<([a-z]+)/i, `<$1 data-uid="${uid}"`);
-                    
                     return codigo + '\n';
                 } catch (e) {
                     console.error('Error generando código:', e);
@@ -838,7 +848,6 @@
 
         function generarCodigoDesdeBloques() {
             if (!blocklyWorkspace) return;
-            
             try {
                 const codigo = Blockly.JavaScript.workspaceToCode(blocklyWorkspace);
                 if (codigo && codigo.trim()) {
@@ -870,11 +879,22 @@
                 if (svgEl) {
                     const width = svgEl.getAttribute('width') || '800';
                     const height = svgEl.getAttribute('height') || '600';
+                    const viewBox = svgEl.getAttribute('viewBox') || `0 0 ${width} ${height}`;
+                    
                     svgPreview.setAttribute('width', width);
                     svgPreview.setAttribute('height', height);
-                    svgPreview.setAttribute('viewBox', svgEl.getAttribute('viewBox') || `0 0 ${width} ${height}`);
+                    svgPreview.setAttribute('viewBox', viewBox);
                     
                     const viewportRect = document.getElementById('viewportRect');
+                    viewportRect.style.display = viewportVisible ? 'block' : 'none';
+                    
+                    // Actualizar rectángulo del viewport a las dimensiones exactas
+                    const vbParts = viewBox.split(' ').map(Number);
+                    viewportRect.setAttribute('x', vbParts[0]);
+                    viewportRect.setAttribute('y', vbParts[1]);
+                    viewportRect.setAttribute('width', vbParts[2]);
+                    viewportRect.setAttribute('height', vbParts[3]);
+                    
                     svgPreview.innerHTML = '';
                     svgPreview.appendChild(viewportRect);
                     
@@ -918,7 +938,6 @@
         function resaltarEnCodigo(uid) {
             const codigo = codeEditor.getValue();
             const lines = codigo.split('\n');
-            
             for (let i = 0; i < lines.length; i++) {
                 if (lines[i].includes(`data-uid="${uid}"`) || lines[i].includes(`data-uid='${uid}'`)) {
                     codeEditor.addLineClass(i, 'background', 'cm-highlight-line');
@@ -936,6 +955,18 @@
             }
         }
 
+        function formatearCodigo() {
+            try {
+                const raw = codeEditor.getValue();
+                if (!raw.trim()) return;
+                const formatted = xmlFormatter(raw, { collapseContent: true, indentation: '  ' });
+                codeEditor.setValue(formatted);
+                showToast('Código formateado correctamente');
+            } catch (e) {
+                showToast('Error al formatear: XML inválido', 'danger');
+            }
+        }
+
         function toggleViewport() {
             viewportVisible = !viewportVisible;
             document.getElementById('viewportRect').style.display = viewportVisible ? 'block' : 'none';
@@ -947,8 +978,65 @@
                 const viewportRect = document.getElementById('viewportRect');
                 svgPreview.innerHTML = '';
                 svgPreview.appendChild(viewportRect);
+                viewportRect.style.display = viewportVisible ? 'block' : 'none';
                 codeEditor.setValue('');
                 if (blocklyWorkspace) blocklyWorkspace.clear();
+            }
+        }
+
+        function descargarImagen(formato) {
+            const svgElement = document.getElementById('svgPreview');
+            const nombre = (document.getElementById('proyectoNombre').value || 'diseño').replace(/[^a-z0-9]/gi, '_').toLowerCase();
+            
+            // Clonar para quitar el viewport rect de la exportación si se desea, o dejarlo
+            const clone = svgElement.cloneNode(true);
+            const viewportRect = clone.querySelector('.viewport-rect');
+            if (viewportRect) viewportRect.remove();
+
+            if (formato === 'svg') {
+                const serializer = new XMLSerializer();
+                let source = serializer.serializeToString(clone);
+                if(!source.match(/^<svg[^>]+xmlns="http:\/\/www\.w3\.org\/2000\/svg"/)){
+                    source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+                }
+                const blob = new Blob([source], {type: 'image/svg+xml;charset=utf-8'});
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `${nombre}.svg`;
+                link.click();
+                URL.revokeObjectURL(url);
+                showToast('SVG descargado');
+            } else {
+                const canvas = document.createElement('canvas');
+                const width = parseInt(clone.getAttribute('width')) || 800;
+                const height = parseInt(clone.getAttribute('height')) || 600;
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                
+                if (formato === 'jpg') {
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.fillRect(0, 0, width, height);
+                }
+                
+                const serializer = new XMLSerializer();
+                const svgStr = serializer.serializeToString(clone);
+                const img = new Image();
+                const svgBlob = new Blob([svgStr], {type: 'image/svg+xml;charset=utf-8'});
+                const url = URL.createObjectURL(svgBlob);
+                
+                img.onload = function() {
+                    ctx.drawImage(img, 0, 0);
+                    const dataUrl = canvas.toDataURL(`image/${formato}`);
+                    const link = document.createElement('a');
+                    link.download = `${nombre}.${formato}`;
+                    link.href = dataUrl;
+                    link.click();
+                    URL.revokeObjectURL(url);
+                    showToast(`Imagen ${formato.toUpperCase()} descargada`);
+                };
+                img.src = url;
             }
         }
 
@@ -964,7 +1052,6 @@
                 container.innerHTML = '<p class="text-muted text-center py-4">No hay funciones creadas. Crea la primera para comenzar.</p>';
                 return;
             }
-
             container.innerHTML = funciones.map(func => `
                 <div class="funcion-item">
                     <div class="d-flex justify-content-between align-items-start">
@@ -1003,7 +1090,6 @@
                     document.getElementById('formFuncionTitle').textContent = 'Editar Función';
                 }
             }
-
             bootstrap.Modal.getInstance(document.getElementById('modalFunciones')).hide();
             new bootstrap.Modal(document.getElementById('modalFormFuncion')).show();
         }
@@ -1018,23 +1104,16 @@
                 propiedades: document.getElementById('funcionPropiedades').value,
                 codigo_plantilla: document.getElementById('funcionCodigo').value
             };
-
             if (id) payload.id = id;
 
-            try {
-                JSON.parse(payload.propiedades);
-            } catch (e) {
-                alert('Las propiedades deben ser un JSON válido');
-                return;
-            }
+            try { JSON.parse(payload.propiedades); } 
+            catch (e) { alert('Las propiedades deben ser un JSON válido'); return; }
 
             if (!payload.nombre || !payload.categoria || !payload.codigo_plantilla) {
-                alert('Completa todos los campos obligatorios');
-                return;
+                alert('Completa todos los campos obligatorios'); return;
             }
 
             document.getElementById('loadingOverlay').classList.add('active');
-            
             try {
                 await sendPostViaForm(payload);
                 bootstrap.Modal.getInstance(document.getElementById('modalFormFuncion')).hide();
@@ -1047,15 +1126,11 @@
             }
         }
 
-        function editarFuncion(id) {
-            openFormFuncion(id);
-        }
+        function editarFuncion(id) { openFormFuncion(id); }
 
         async function borrarFuncion(id) {
             if (!confirm('¿Borrar esta función?')) return;
-            
             document.getElementById('loadingOverlay').classList.add('active');
-            
             try {
                 await sendPostViaForm({ action: 'borrar_funcion', id });
                 showToast('Función borrada');
@@ -1079,7 +1154,6 @@
                 container.innerHTML = '<p class="text-muted text-center py-4">No hay proyectos guardados.</p>';
                 return;
             }
-
             container.innerHTML = proyectos.map(proy => `
                 <div class="proyecto-item" onclick="cargarProyecto('${proy.ID}')">
                     <div class="d-flex justify-content-between align-items-center">
@@ -1141,7 +1215,6 @@
             };
 
             document.getElementById('loadingOverlay').classList.add('active');
-            
             try {
                 await sendPostViaForm(payload);
                 bootstrap.Modal.getInstance(document.getElementById('modalGuardarProyecto')).hide();
@@ -1156,9 +1229,7 @@
 
         async function borrarProyecto(id) {
             if (!confirm('¿Borrar este proyecto?')) return;
-            
             document.getElementById('loadingOverlay').classList.add('active');
-            
             try {
                 await sendPostViaForm({ action: 'borrar_proyecto', id });
                 showToast('Proyecto borrado');
@@ -1170,7 +1241,6 @@
             }
         }
 
-        // ============ UTILIDADES ============
         function actualizarEstado() {
             const codigo = codeEditor.getValue();
             document.getElementById('statusInfo').textContent = codigo ? 'Editando...' : 'Vacío';
