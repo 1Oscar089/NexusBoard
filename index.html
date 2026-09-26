@@ -155,33 +155,14 @@
             animation: spin 1s linear infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        .sync-status {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 10px 15px;
-            border-radius: 10px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            z-index: 9998;
-            display: none;
-        }
-        .sync-status.active { display: block; }
-        .sync-status.syncing { background: var(--naranja); color: white; }
-        .sync-status.synced { background: var(--celeste); color: #333; }
-        .sync-status.error { background: var(--rojo-atardecer); color: white; }
     </style>
 </head>
 <body>
 
     <div class="loading-overlay" id="loadingOverlay">
         <div class="spinner"></div>
-        <p class="mt-3 mb-0 fw-semibold" style="color: var(--turquesa);">Sincronizando con Google Sheets...</p>
-        <p class="mt-2 mb-0 text-muted" id="syncMessage">Por favor espera</p>
+        <p class="mt-3 mb-0 fw-semibold" style="color: var(--turquesa);">Sincronizando...</p>
     </div>
-
-    <div class="sync-status" id="syncStatus"></div>
 
     <nav class="navbar navbar-expand-lg sticky-top">
         <div class="container">
@@ -278,132 +259,42 @@
     <script>
         const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbysNMF8vT-y6_P0G6FW3kSsWTFpf8MFNYy7Umz_wFccTgIcpOKJzn49Hp-tPz54vGtlgA/exec';
         const STORAGE_KEY = 'nexusboard_modulos';
-        const SYNC_INTERVAL = 30000; // Sincronizar cada 30 segundos
 
         document.addEventListener('DOMContentLoaded', () => {
             loadModules();
-            // Sincronización periódica
-            setInterval(() => {
-                syncWithServer();
-            }, SYNC_INTERVAL);
         });
 
-        // Carga inicial
+        // ============ CARGA DE DATOS ============
         async function loadModules() {
-            showSyncStatus('Cargando datos...', 'syncing');
-            
+            // 1. Carga optimista desde LocalStorage
+            const localData = localStorage.getItem(STORAGE_KEY);
+            if (localData) {
+                renderModules(JSON.parse(localData));
+            } else {
+                showEmptyState(true);
+            }
+
+            // 2. Sincronización con el servidor (SIN no-cors)
             try {
-                // Intentar cargar del servidor primero
-                const serverData = await fetchFromServer();
-                if (serverData && serverData.length > 0) {
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(serverData));
-                    renderModules(serverData);
-                    showSyncStatus('Sincronizado', 'synced');
-                } else {
-                    // Si no hay datos en servidor, usar localStorage
-                    const localData = localStorage.getItem(STORAGE_KEY);
-                    if (localData) {
-                        const modules = JSON.parse(localData);
-                        renderModules(modules);
-                        // Subir datos locales al servidor si existen
-                        if (modules.length > 0) {
-                            showSyncStatus('Sincronizando cambios locales...', 'syncing');
-                            await uploadLocalChanges(modules);
-                        }
-                    } else {
-                        showEmptyState(true);
+                const response = await fetch(APPS_SCRIPT_URL, {
+                    method: 'GET',
+                    redirect: 'follow'
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.status === 'success') {
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify(result.data));
+                        renderModules(result.data);
                     }
-                    showSyncStatus('Listo', 'synced');
                 }
             } catch (error) {
-                console.error('Error loading modules:', error);
-                showSyncStatus('Error de conexión', 'error');
-                // Fallback a localStorage
-                const localData = localStorage.getItem(STORAGE_KEY);
-                if (localData) {
-                    renderModules(JSON.parse(localData));
-                } else {
-                    showEmptyState(true);
-                }
-            }
-            
-            setTimeout(() => {
-                document.getElementById('syncStatus').classList.remove('active');
-            }, 3000);
-        }
-
-        // Fetch con manejo de CORS
-        async function fetchFromServer() {
-            try {
-                // Usar no-cors para evitar bloqueo
-                const response = await fetch(APPS_SCRIPT_URL, { 
-                    method: 'GET',
-                    mode: 'no-cors'
-                });
-                
-                // Con no-cors no podemos leer la respuesta directamente
-                // Así que usamos un workaround: esperar y luego verificar localStorage
-                // que será actualizado por el service worker o por un script tag
-                
-                return null; // Retornamos null y confiamos en localStorage
-            } catch (error) {
-                console.error('Fetch error:', error);
-                return null;
+                console.error('Error al sincronizar:', error);
+                // Si falla, mantener datos locales
             }
         }
 
-        // Subir cambios locales al servidor
-        async function uploadLocalChanges(modules) {
-            for (let i = 0; i < modules.length; i++) {
-                const mod = modules[i];
-                const payload = {
-                    action: 'crear',
-                    titulo: mod.Titulo,
-                    descripcion: mod.Descripcion,
-                    emoji: mod.Emoji,
-                    url: mod.URL_Pagina,
-                    limite_filas: mod.Limite_Filas
-                };
-                
-                try {
-                    await sendPostViaForm(payload);
-                    await sleep(1000); // Esperar 1 segundo entre cada envío
-                } catch (error) {
-                    console.error('Error uploading module:', mod.Titulo, error);
-                }
-            }
-        }
-
-        // Sincronización periódica
-        async function syncWithServer() {
-            showSyncStatus('Sincronizando...', 'syncing');
-            
-            try {
-                // Forzar recarga desde servidor
-                const timestamp = new Date().getTime();
-                const response = await fetch(`${APPS_SCRIPT_URL}?t=${timestamp}`, {
-                    method: 'GET',
-                    mode: 'no-cors'
-                });
-                
-                // Esperar un momento y recargar
-                await sleep(2000);
-                const localData = localStorage.getItem(STORAGE_KEY);
-                if (localData) {
-                    renderModules(JSON.parse(localData));
-                }
-                
-                showSyncStatus('Sincronizado', 'synced');
-            } catch (error) {
-                console.error('Sync error:', error);
-                showSyncStatus('Error de sync', 'error');
-            }
-            
-            setTimeout(() => {
-                document.getElementById('syncStatus').classList.remove('active');
-            }, 3000);
-        }
-
+        // ============ RENDERIZADO ============
         function renderModules(modules) {
             const grid = document.getElementById('modulesGrid');
             const emptyState = document.getElementById('emptyState');
@@ -470,6 +361,7 @@
             }
         }
 
+        // ============ MODAL ============
         function openModal(action, id = null) {
             document.getElementById('formAction').value = action;
             document.getElementById('moduleForm').reset();
@@ -495,13 +387,17 @@
             modal.show();
         }
 
-        // Enviar POST via formulario
+        // ============ ENVIAR DATOS (POST via formulario + iframe) ============
         function sendPostViaForm(payload) {
-            return new Promise((resolve, reject) => {
+            return new Promise((resolve) => {
+                const iframe = document.createElement('iframe');
+                iframe.name = 'hidden_post_frame_' + Date.now();
+                iframe.style.display = 'none';
+                
                 const form = document.createElement('form');
                 form.method = 'POST';
                 form.action = APPS_SCRIPT_URL;
-                form.target = 'hidden_iframe';
+                form.target = iframe.name;
                 form.style.display = 'none';
                 
                 const input = document.createElement('input');
@@ -510,49 +406,38 @@
                 input.value = JSON.stringify(payload);
                 
                 form.appendChild(input);
+                document.body.appendChild(iframe);
                 document.body.appendChild(form);
                 
-                // Manejar la carga del iframe
-                const iframe = document.createElement('iframe');
-                iframe.name = 'hidden_iframe';
-                iframe.style.display = 'none';
+                let resolved = false;
+                
                 iframe.onload = function() {
-                    document.body.removeChild(form);
-                    document.body.removeChild(iframe);
-                    resolve({ status: 'success' });
-                };
-                iframe.onerror = function() {
-                    document.body.removeChild(form);
-                    document.body.removeChild(iframe);
-                    reject(new Error('POST failed'));
+                    if (!resolved) {
+                        resolved = true;
+                        // Después del POST, hacer GET para obtener datos actualizados
+                        setTimeout(() => {
+                            loadModules().then(() => {
+                                resolve({ status: 'success' });
+                            });
+                        }, 1500);
+                    }
                 };
                 
-                document.body.appendChild(iframe);
                 form.submit();
                 
                 // Timeout de seguridad
                 setTimeout(() => {
-                    if (form.parentNode) {
-                        document.body.removeChild(form);
+                    if (!resolved) {
+                        resolved = true;
+                        loadModules().then(() => resolve({ status: 'success' }));
                     }
-                    if (iframe.parentNode) {
-                        document.body.removeChild(iframe);
-                    }
-                    resolve({ status: 'success' }); // Asumir éxito
-                }, 5000);
+                    if (form.parentNode) document.body.removeChild(form);
+                    if (iframe.parentNode) document.body.removeChild(iframe);
+                }, 8000);
             });
         }
 
-        function sleep(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
-        }
-
-        function showSyncStatus(message, type) {
-            const status = document.getElementById('syncStatus');
-            status.textContent = message;
-            status.className = `sync-status active ${type}`;
-        }
-
+        // ============ GUARDAR MÓDULO ============
         async function saveModule() {
             const action = document.getElementById('formAction').value;
             const payload = {
@@ -577,59 +462,17 @@
 
             try {
                 await sendPostViaForm(payload);
-                
-                // Actualizar localStorage localmente
-                updateLocalStorage(payload);
-                
-                // Esperar y sincronizar
-                await sleep(2000);
-                await syncWithServer();
-                
                 bootstrap.Modal.getInstance(document.getElementById('moduleModal')).hide();
-                loadModules();
-                showToast('Módulo guardado y sincronizado');
+                showToast('Módulo guardado correctamente');
             } catch (error) {
-                console.error('Error saving module:', error);
-                showToast('Error al guardar. Intentando de nuevo...', 'danger');
-                // Reintentar
-                await sleep(2000);
-                await syncWithServer();
+                console.error('Error:', error);
+                showToast('Error al guardar', 'danger');
             } finally {
                 document.getElementById('loadingOverlay').classList.remove('active');
             }
         }
 
-        function updateLocalStorage(payload) {
-            let modules = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-            
-            if (payload.action === 'crear') {
-                const newMod = {
-                    ID: 'MOD-' + new Date().getTime(),
-                    Titulo: payload.titulo,
-                    Descripcion: payload.descripcion,
-                    Emoji: payload.emoji,
-                    URL_Pagina: payload.url,
-                    Limite_Filas: payload.limite_filas,
-                    Filas_Usadas: 0,
-                    Fecha_Creacion: new Date().toLocaleString()
-                };
-                modules.push(newMod);
-            } else if (payload.action === 'editar') {
-                const index = modules.findIndex(m => m.ID === payload.id);
-                if (index !== -1) {
-                    modules[index].Titulo = payload.titulo;
-                    modules[index].Descripcion = payload.descripcion;
-                    modules[index].Emoji = payload.emoji;
-                    modules[index].URL_Pagina = payload.url;
-                    modules[index].Limite_Filas = payload.limite_filas;
-                }
-            } else if (payload.action === 'borrar') {
-                modules = modules.filter(m => m.ID !== payload.id);
-            }
-            
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(modules));
-        }
-
+        // ============ BORRAR MÓDULO ============
         let deleteId = null;
         function confirmDelete(id) {
             deleteId = id;
@@ -648,16 +491,10 @@
                     };
 
                     await sendPostViaForm(payload);
-                    updateLocalStorage(payload);
-                    
-                    await sleep(2000);
-                    await syncWithServer();
-                    
                     bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
-                    loadModules();
                     showToast('Módulo eliminado');
                 } catch (error) {
-                    console.error('Error deleting module:', error);
+                    console.error('Error:', error);
                     showToast('Error al eliminar', 'danger');
                 } finally {
                     document.getElementById('loadingOverlay').classList.remove('active');
@@ -665,6 +502,7 @@
             }
         });
 
+        // ============ TOAST ============
         function showToast(message, type = 'success') {
             const toastContainer = document.createElement('div');
             toastContainer.style.cssText = 'position: fixed; top: 70px; right: 20px; z-index: 9999;';
