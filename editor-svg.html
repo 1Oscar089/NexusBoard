@@ -313,14 +313,14 @@
             </a>
             <div class="d-flex align-items-center">
                 <span class="me-3 fw-semibold" style="color: var(--gris);" id="projectNameDisplay">Sin proyecto</span>
+                <button class="btn btn-nav" onclick="openModalFunciones()">
+                    <i class="bi bi-puzzle me-1"></i> Funciones
+                </button>
                 <button class="btn btn-nav" onclick="openModalProyectos()">
                     <i class="bi bi-folder2-open me-1"></i> Proyectos
                 </button>
                 <button class="btn btn-nav btn-nav-orange" onclick="guardarProyecto()">
                     <i class="bi bi-save me-1"></i> Guardar
-                </button>
-                <button class="btn btn-nav" onclick="openModalFunciones()">
-                    <i class="bi bi-puzzle me-1"></i> Funciones
                 </button>
             </div>
         </div>
@@ -341,7 +341,6 @@
             </div>
             <div id="panelBloques" style="flex: 1; display: none;">
                 <div id="blocklyDiv"></div>
-                <xml id="toolbox" style="display: none"></xml>
             </div>
             <div class="status-bar">
                 <span id="statusInfo">Listo</span>
@@ -515,10 +514,10 @@
         let blocklyWorkspace = null;
         let uidCounter = 0;
         let viewportVisible = false;
+        let blocklyInitialized = false;
 
         document.addEventListener('DOMContentLoaded', () => {
             initCodeMirror();
-            initBlockly();
             cargarDatos();
         });
 
@@ -579,21 +578,76 @@
             });
         }
 
+        // Inicializar Blockly DESPUÉS de cargar las funciones
         function initBlockly() {
+            if (blocklyInitialized) return;
+            
+            const toolboxXml = generateToolboxXml();
+            
             blocklyWorkspace = Blockly.inject('blocklyDiv', {
-                toolbox: document.getElementById('toolbox'),
+                toolbox: toolboxXml,
                 grid: { spacing: 20, length: 3, colour: '#ccc', snap: true },
                 zoom: { controls: true, wheel: true, startScale: 0.8, maxScale: 2, minScale: 0.3 },
-                trashcan: true,
-                theme: Blockly.Themes.Dark
+                trashcan: true
             });
 
             blocklyWorkspace.addChangeListener(() => {
                 generarCodigoDesdeBloques();
             });
+
+            blocklyInitialized = true;
         }
 
-        // ============ CARGA DE DATOS CON FETCH CORRECTO ============
+        // Generar XML del toolbox
+        function generateToolboxXml() {
+            const categorias = {};
+            funciones.forEach(func => {
+                const cat = func.Categoria || 'General';
+                if (!categorias[cat]) categorias[cat] = [];
+                categorias[cat].push(func);
+            });
+
+            let toolboxXml = '<xml>';
+            Object.keys(categorias).forEach(cat => {
+                toolboxXml += `<category name="${cat}" colour="${getColorCategoria(cat)}">`;
+                categorias[cat].forEach(func => {
+                    toolboxXml += `<block type="funcion_svg">`;
+                    toolboxXml += `<field name="FUNC_ID">${func.ID}</field>`;
+                    toolboxXml += `</block>`;
+                });
+                toolboxXml += '</category>';
+            });
+            
+            // Si no hay categorías, agregar una vacía para evitar el error
+            if (Object.keys(categorias).length === 0) {
+                toolboxXml += '<category name="General" colour="#219EBC"></category>';
+            }
+            
+            toolboxXml += '</xml>';
+            return toolboxXml;
+        }
+
+        // Actualizar toolbox cuando cambian las funciones
+        function actualizarToolbox() {
+            if (!blocklyWorkspace) {
+                initBlockly();
+                return;
+            }
+
+            const toolboxXml = generateToolboxXml();
+            
+            try {
+                blocklyWorkspace.updateToolbox(toolboxXml);
+            } catch (error) {
+                console.error('Error actualizando toolbox:', error);
+                // Si falla, recrear el workspace
+                blocklyWorkspace.dispose();
+                blocklyInitialized = false;
+                initBlockly();
+            }
+        }
+
+        // ============ CARGA DE DATOS ============
         async function cargarDatos() {
             document.getElementById('loadingOverlay').classList.add('active');
 
@@ -604,7 +658,6 @@
 
             if (localFunc) {
                 funciones = JSON.parse(localFunc);
-                actualizarToolbox();
             }
             if (localProy) proyectos = JSON.parse(localProy);
             if (localActual) {
@@ -612,7 +665,7 @@
                 cargarProyectoEnEditor(proyectoActual);
             }
 
-            // Sincronización con servidor (GET sin no-cors)
+            // Sincronización con servidor
             try {
                 const [resFunc, resProy] = await Promise.all([
                     fetch(APPS_SCRIPT_URL + '?tipo=funciones', { method: 'GET', redirect: 'follow' }),
@@ -624,7 +677,6 @@
                     if (dataFunc.status === 'success') {
                         funciones = dataFunc.data;
                         localStorage.setItem(STORAGE_KEY_FUNCIONES, JSON.stringify(funciones));
-                        actualizarToolbox();
                     }
                 }
 
@@ -635,9 +687,16 @@
                         localStorage.setItem(STORAGE_KEY_PROYECTOS, JSON.stringify(proyectos));
                     }
                 }
+
+                // Inicializar Blockly después de cargar funciones
+                actualizarToolbox();
+                
+                showToast('Sincronizado correctamente');
             } catch (error) {
                 console.error('Error cargando datos:', error);
                 showToast('Error de sincronización, usando datos locales', 'warning');
+                // Aún así inicializar Blockly con datos locales
+                actualizarToolbox();
             }
 
             document.getElementById('loadingOverlay').classList.remove('active');
@@ -701,44 +760,25 @@
             if (tab === 'codigo') {
                 setTimeout(() => codeEditor.refresh(), 100);
             } else {
-                setTimeout(() => Blockly.svgResize(blocklyWorkspace), 100);
+                setTimeout(() => {
+                    if (blocklyWorkspace) {
+                        Blockly.svgResize(blocklyWorkspace);
+                    }
+                }, 100);
             }
         }
 
-        // ============ TOOLBOX DINÁMICO ============
-        function actualizarToolbox() {
-            const categorias = {};
-            funciones.forEach(func => {
-                const cat = func.Categoria || 'General';
-                if (!categorias[cat]) categorias[cat] = [];
-                categorias[cat].push(func);
-            });
+        // ============ REGISTRO DE BLOQUE PERSONALIZADO ============
+        function registerBlocklyBlock() {
+            if (Blockly.Blocks['funcion_svg']) return;
 
-            let toolboxXml = '<xml id="toolbox" style="display: none">';
-            Object.keys(categorias).forEach(cat => {
-                toolboxXml += `<category name="${cat}" colour="${getColorCategoria(cat)}">`;
-                categorias[cat].forEach(func => {
-                    toolboxXml += `<block type="funcion_svg">`;
-                    toolboxXml += `<field name="FUNC_ID">${func.ID}</field>`;
-                    toolboxXml += `</block>`;
-                });
-                toolboxXml += '</category>';
-            });
-            toolboxXml += '</xml>';
-
-            document.getElementById('toolbox').outerHTML = toolboxXml;
-            
-            if (blocklyWorkspace) {
-                blocklyWorkspace.updateToolbox(document.getElementById('toolbox'));
-            }
-
-            if (!Blockly.Blocks['funcion_svg']) {
-                Blockly.Blocks['funcion_svg'] = {
-                    init: function() {
-                        const funcId = this.getFieldValue('FUNC_ID');
-                        const func = funciones.find(f => f.ID === funcId);
-                        if (func) {
-                            this.appendDummyInput().appendField(`${func.Icono} ${func.Nombre}`);
+            Blockly.Blocks['funcion_svg'] = {
+                init: function() {
+                    const funcId = this.getFieldValue('FUNC_ID');
+                    const func = funciones.find(f => f.ID === funcId);
+                    if (func) {
+                        this.appendDummyInput().appendField(`${func.Icono} ${func.Nombre}`);
+                        try {
                             const props = JSON.parse(func.Propiedades);
                             props.forEach(prop => {
                                 if (prop.tipo === 'number') {
@@ -754,19 +794,23 @@
                                         .appendField(prop.nombre);
                                 }
                             });
-                            this.setPreviousStatement(true);
-                            this.setNextStatement(true);
-                            this.setColour(getColorCategoria(func.Categoria));
-                            this.setTooltip(func.Codigo_Plantilla);
+                        } catch (e) {
+                            console.error('Error parseando propiedades:', e);
                         }
+                        this.setPreviousStatement(true);
+                        this.setNextStatement(true);
+                        this.setColour(getColorCategoria(func.Categoria));
+                        this.setTooltip(func.Codigo_Plantilla);
                     }
-                };
+                }
+            };
 
-                Blockly.JavaScript['funcion_svg'] = function(block) {
-                    const funcId = block.getFieldValue('FUNC_ID');
-                    const func = funciones.find(f => f.ID === funcId);
-                    if (!func) return '';
-                    
+            Blockly.JavaScript['funcion_svg'] = function(block) {
+                const funcId = block.getFieldValue('FUNC_ID');
+                const func = funciones.find(f => f.ID === funcId);
+                if (!func) return '';
+                
+                try {
                     const props = JSON.parse(func.Propiedades);
                     let codigo = func.Codigo_Plantilla;
                     const uid = 'el-' + (++uidCounter);
@@ -780,8 +824,11 @@
                     codigo = codigo.replace(/<([a-z]+)/i, `<$1 data-uid="${uid}"`);
                     
                     return codigo + '\n';
-                };
-            }
+                } catch (e) {
+                    console.error('Error generando código:', e);
+                    return '';
+                }
+            };
         }
 
         function getColorCategoria(cat) {
@@ -790,10 +837,16 @@
         }
 
         function generarCodigoDesdeBloques() {
-            const codigo = Blockly.JavaScript.workspaceToCode(blocklyWorkspace);
-            if (codigo && codigo.trim()) {
-                const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">\n${codigo}</svg>`;
-                codeEditor.setValue(svgContent);
+            if (!blocklyWorkspace) return;
+            
+            try {
+                const codigo = Blockly.JavaScript.workspaceToCode(blocklyWorkspace);
+                if (codigo && codigo.trim()) {
+                    const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">\n${codigo}</svg>`;
+                    codeEditor.setValue(svgContent);
+                }
+            } catch (e) {
+                console.error('Error generando código:', e);
             }
         }
 
