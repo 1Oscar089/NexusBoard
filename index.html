@@ -187,9 +187,43 @@
             background-color: var(--celeste);
             color: var(--turquesa);
         }
+
+        /* Loading Spinner */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(244, 241, 222, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .loading-overlay.active {
+            display: flex;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid var(--celeste);
+            border-top: 5px solid var(--turquesa);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
 
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg sticky-top">
@@ -414,6 +448,24 @@
             modal.show();
         }
 
+        // --- FUNCIÓN CORREGIDA PARA ENVIAR DATOS A APPS SCRIPT ---
+        function sendToAppsScript(payload) {
+            return new Promise((resolve, reject) => {
+                // Usar FormData para evitar problemas de CORS
+                const formData = new FormData();
+                formData.append('data', JSON.stringify(payload));
+                
+                fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    body: formData,
+                    redirect: 'follow'
+                })
+                .then(response => response.json())
+                .then(result => resolve(result))
+                .catch(error => reject(error));
+            });
+        }
+
         function saveModule() {
             const action = document.getElementById('formAction').value;
             const payload = {
@@ -435,20 +487,24 @@
                 return;
             }
 
-            fetch(APPS_SCRIPT_URL, {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            })
-            .then(response => response.json())
-            .then(result => {
-                if (result.status === 'success') {
-                    bootstrap.Modal.getInstance(document.getElementById('moduleModal')).hide();
-                    loadModules(); // Recargar para traer datos frescos
-                } else {
-                    alert('Error al guardar: ' + result.message);
-                }
-            })
-            .catch(error => console.error('Error:', error));
+            // Mostrar loading
+            document.getElementById('loadingOverlay').classList.add('active');
+
+            sendToAppsScript(payload)
+                .then(result => {
+                    document.getElementById('loadingOverlay').classList.remove('active');
+                    if (result.status === 'success') {
+                        bootstrap.Modal.getInstance(document.getElementById('moduleModal')).hide();
+                        loadModules();
+                    } else {
+                        alert('Error al guardar: ' + result.message);
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('loadingOverlay').classList.remove('active');
+                    console.error('Error:', error);
+                    alert('Error de conexión con la base de datos');
+                });
         }
 
         // --- BORRAR ---
@@ -466,18 +522,20 @@
                     id: deleteId
                 };
 
-                fetch(APPS_SCRIPT_URL, {
-                    method: 'POST',
-                    body: JSON.stringify(payload)
-                })
-                .then(response => response.json())
-                .then(result => {
-                    if (result.status === 'success') {
-                        bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
-                        loadModules();
-                    }
-                })
-                .catch(error => console.error('Error:', error));
+                document.getElementById('loadingOverlay').classList.add('active');
+
+                sendToAppsScript(payload)
+                    .then(result => {
+                        document.getElementById('loadingOverlay').classList.remove('active');
+                        if (result.status === 'success') {
+                            bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+                            loadModules();
+                        }
+                    })
+                    .catch(error => {
+                        document.getElementById('loadingOverlay').classList.remove('active');
+                        console.error('Error:', error);
+                    });
             }
         });
     </script>
