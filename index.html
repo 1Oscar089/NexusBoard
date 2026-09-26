@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NexusBoard - Dashboard</title>
-    <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <style>
         :root {
@@ -163,7 +161,6 @@
             margin-bottom: 1rem;
         }
 
-        /* Modal Styles */
         .modal-content {
             border-radius: 15px;
             border: none;
@@ -188,7 +185,6 @@
             color: var(--turquesa);
         }
 
-        /* Loading Spinner */
         .loading-overlay {
             position: fixed;
             top: 0;
@@ -220,12 +216,10 @@
 </head>
 <body>
 
-    <!-- Loading Overlay -->
     <div class="loading-overlay" id="loadingOverlay">
         <div class="spinner"></div>
     </div>
 
-    <!-- Navbar -->
     <nav class="navbar navbar-expand-lg sticky-top">
         <div class="container">
             <a class="navbar-brand" href="#">Nexus<span>Board</span></a>
@@ -235,7 +229,6 @@
         </div>
     </nav>
 
-    <!-- Main Content -->
     <main class="container my-5">
         <div class="row mb-4">
             <div class="col">
@@ -244,9 +237,7 @@
             </div>
         </div>
 
-        <div id="modulesGrid" class="row g-4">
-            <!-- Las tarjetas se inyectan aquí -->
-        </div>
+        <div id="modulesGrid" class="row g-4"></div>
 
         <div id="emptyState" class="empty-state d-none">
             <i class="bi bi-grid-3x3-gap-fill"></i>
@@ -255,7 +246,6 @@
         </div>
     </main>
 
-    <!-- Modal Crear/Editar -->
     <div class="modal fade" id="moduleModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -270,7 +260,7 @@
                         
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Emoji del Módulo</label>
-                            <input type="text" class="form-control" id="moduleEmoji" placeholder="Ej: 📊, 📦, 👥" maxlength="2" required>
+                            <input type="text" class="form-control" id="moduleEmoji" placeholder="Ej: 📊, , 👥" maxlength="2" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Título</label>
@@ -299,7 +289,6 @@
         </div>
     </div>
 
-    <!-- Modal Confirmar Borrado -->
     <div class="modal fade" id="deleteModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-sm">
             <div class="modal-content">
@@ -319,23 +308,17 @@
         </div>
     </div>
 
-    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
-        // --- CONFIGURACIÓN ---
-        // PEGA AQUÍ LA URL DE APPS SCRIPT TERMINADA EN /exec
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz76Kf79JB6zY9-z-Q68f0ZAidxZHEzdKfJEob_j9s4ssQcYcuSFvT7YaQiWUdrvC4/exec';
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbysNMF8vT-y6_P0G6FW3kSsWTFpf8MFNYy7Umz_wFccTgIcpOKJzn49Hp-tPz54vGtlgA/exec';
         const STORAGE_KEY = 'nexusboard_modulos';
 
-        // --- INICIALIZACIÓN ---
         document.addEventListener('DOMContentLoaded', () => {
             loadModules();
         });
 
-        // --- CARGA DE DATOS (LOCALSTORAGE + FETCH) ---
         function loadModules() {
-            // 1. Carga optimista desde LocalStorage
             const localData = localStorage.getItem(STORAGE_KEY);
             if (localData) {
                 renderModules(JSON.parse(localData));
@@ -343,7 +326,6 @@
                 showEmptyState(true);
             }
 
-            // 2. Sincronización en segundo plano
             fetch(APPS_SCRIPT_URL)
                 .then(response => response.json())
                 .then(result => {
@@ -352,10 +334,12 @@
                         renderModules(result.data);
                     }
                 })
-                .catch(error => console.error('Error al sincronizar con la DB:', error));
+                .catch(error => {
+                    console.error('Error al sincronizar con la DB:', error);
+                    showToast('Error de conexión. Verifica que el Apps Script esté desplegado como "Cualquier persona"', 'danger');
+                });
         }
 
-        // --- RENDERIZADO ---
         function renderModules(modules) {
             const grid = document.getElementById('modulesGrid');
             const emptyState = document.getElementById('emptyState');
@@ -422,7 +406,6 @@
             }
         }
 
-        // --- MODAL Y FORMULARIO ---
         function openModal(action, id = null) {
             document.getElementById('formAction').value = action;
             document.getElementById('moduleForm').reset();
@@ -448,10 +431,8 @@
             modal.show();
         }
 
-        // --- FUNCIÓN CORREGIDA PARA ENVIAR DATOS A APPS SCRIPT ---
         function sendToAppsScript(payload) {
             return new Promise((resolve, reject) => {
-                // Usar FormData para evitar problemas de CORS
                 const formData = new FormData();
                 formData.append('data', JSON.stringify(payload));
                 
@@ -481,13 +462,11 @@
                 payload.id = document.getElementById('moduleId').value;
             }
 
-            // Validación básica
             if(!payload.titulo || !payload.emoji || !payload.url) {
                 alert('Por favor, completa todos los campos obligatorios.');
                 return;
             }
 
-            // Mostrar loading
             document.getElementById('loadingOverlay').classList.add('active');
 
             sendToAppsScript(payload)
@@ -496,18 +475,19 @@
                     if (result.status === 'success') {
                         bootstrap.Modal.getInstance(document.getElementById('moduleModal')).hide();
                         loadModules();
+                        showToast('Módulo guardado correctamente');
                     } else {
                         alert('Error al guardar: ' + result.message);
+                        showToast('Error al guardar el módulo', 'danger');
                     }
                 })
                 .catch(error => {
                     document.getElementById('loadingOverlay').classList.remove('active');
                     console.error('Error:', error);
-                    alert('Error de conexión con la base de datos');
+                    showToast('Error de conexión. Verifica el despliegue del Apps Script', 'danger');
                 });
         }
 
-        // --- BORRAR ---
         let deleteId = null;
         function confirmDelete(id) {
             deleteId = id;
@@ -530,14 +510,35 @@
                         if (result.status === 'success') {
                             bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
                             loadModules();
+                            showToast('Módulo eliminado');
                         }
                     })
                     .catch(error => {
                         document.getElementById('loadingOverlay').classList.remove('active');
                         console.error('Error:', error);
+                        showToast('Error al eliminar', 'danger');
                     });
             }
         });
+
+        function showToast(message, type = 'success') {
+            const toastContainer = document.createElement('div');
+            toastContainer.style.cssText = 'position: fixed; top: 70px; right: 20px; z-index: 9999;';
+            
+            const bgClass = type === 'danger' ? 'bg-danger' : 'bg-success';
+            
+            toastContainer.innerHTML = `
+                <div class="toast show ${bgClass} text-white" role="alert">
+                    <div class="toast-body d-flex justify-content-between align-items-center">
+                        <span>${message}</span>
+                        <button type="button" class="btn-close btn-close-white" onclick="this.parentElement.parentElement.remove()"></button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(toastContainer);
+            setTimeout(() => toastContainer.remove(), 3000);
+        }
     </script>
 </body>
 </html>
