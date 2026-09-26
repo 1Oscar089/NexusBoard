@@ -3,236 +3,223 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NexusBoard | Panel de Control</title>
+    <title>NexusBoard - Dashboard</title>
     <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-    
     <style>
         :root {
-            --rojo-atardecer: #ff5a3c;
-            --celeste: #7dd3fc;
-            --naranja-turquesa: #ff9f68;
-            --gris: #6b7280;
-            --blanco: #ffffff;
-            --lila: #c4b5fd;
-            --amarillo-hueso: #f7f3e3;
+            --rojo-atardecer: #FF5A5F;
+            --celeste: #8ECAE6;
+            --naranja: #FB8500;
+            --turquesa: #219EBC;
+            --gris: #6C757D;
+            --blanco: #FFFFFF;
+            --lila: #C8B6FF;
+            --amarillo-hueso: #F4F1DE;
         }
 
         body {
             background-color: var(--amarillo-hueso);
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            color: var(--gris);
+            color: #333;
         }
 
-        /* Navbar */
-        .navbar-custom {
-            background: linear-gradient(135deg, var(--rojo-atardecer), var(--naranja-turquesa));
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-        .navbar-custom .navbar-brand, .navbar-custom .nav-link {
-            color: var(--blanco) !important;
-            font-weight: 600;
+        .navbar {
+            background-color: var(--blanco);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-bottom: 3px solid var(--turquesa);
         }
 
-        /* Storage Bar */
-        .storage-card {
-            background: var(--blanco);
-            border-radius: 16px;
+        .navbar-brand {
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: var(--turquesa) !important;
+            letter-spacing: -0.5px;
+        }
+
+        .navbar-brand span {
+            color: var(--rojo-atardecer);
+        }
+
+        .btn-add-module {
+            background-color: var(--turquesa);
+            color: white;
             border: none;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        }
-        .progress-custom {
-            height: 12px;
-            border-radius: 10px;
-            background-color: #e5e7eb;
-        }
-        .progress-bar-custom {
-            background: linear-gradient(90deg, var(--celeste), var(--lila));
-            border-radius: 10px;
-            transition: width 0.6s ease;
-        }
-        .progress-bar-custom.warning {
-            background: linear-gradient(90deg, var(--naranja-turquesa), var(--rojo-atardecer));
+            font-weight: 600;
+            transition: all 0.3s ease;
         }
 
-        /* Module Cards */
-        .module-card {
-            background: var(--blanco);
-            border-radius: 16px;
-            border: 2px solid transparent;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-            height: 100%;
+        .btn-add-module:hover {
+            background-color: var(--celeste);
+            color: var(--turquesa);
+            transform: translateY(-2px);
         }
+
+        .module-card {
+            background-color: var(--blanco);
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            border-left: 5px solid var(--turquesa);
+        }
+
         .module-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 15px -3px rgba(255, 90, 60, 0.15);
-            border-color: var(--celeste);
+            box-shadow: 0 10px 25px rgba(33, 158, 188, 0.15);
         }
-        .module-card .card-body {
+
+        .card-body-custom {
             padding: 1.5rem;
         }
-        .module-emoji {
+
+        .card-emoji {
             font-size: 2.5rem;
             margin-bottom: 0.5rem;
-            display: block;
         }
-        .module-title {
-            color: var(--rojo-atardecer);
+
+        .card-title-custom {
             font-weight: 700;
-            font-size: 1.25rem;
+            color: #2b2d42;
             margin-bottom: 0.5rem;
         }
-        .module-desc {
+
+        .card-text-custom {
             color: var(--gris);
             font-size: 0.9rem;
             margin-bottom: 1rem;
+            height: 40px;
+            overflow: hidden;
         }
+
+        .storage-section {
+            background-color: var(--amarillo-hueso);
+            padding: 0.8rem;
+            border-radius: 10px;
+            margin-top: 1rem;
+        }
+
+        .storage-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--gris);
+            text-transform: uppercase;
+            margin-bottom: 0.3rem;
+        }
+
+        .progress {
+            height: 8px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+        }
+
+        .progress-bar-low { background-color: var(--celeste); }
+        .progress-bar-med { background-color: var(--naranja); }
+        .progress-bar-high { background-color: var(--rojo-atardecer); }
+
         .card-actions {
             position: absolute;
             top: 10px;
             right: 10px;
+            display: none;
+        }
+
+        .module-card:hover .card-actions {
             display: flex;
             gap: 5px;
-            opacity: 0;
-            transition: opacity 0.2s;
         }
-        .module-card:hover .card-actions {
-            opacity: 1;
-        }
+
         .btn-action {
-            width: 32px;
-            height: 32px;
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            font-size: 0.8rem;
             border: none;
-            font-size: 0.9rem;
-            transition: all 0.2s;
-        }
-        .btn-edit { background-color: var(--celeste); color: var(--blanco); }
-        .btn-edit:hover { background-color: #38bdf8; color: var(--blanco); }
-        .btn-delete { background-color: #fecaca; color: #ef4444; }
-        .btn-delete:hover { background-color: #ef4444; color: var(--blanco); }
-
-        /* Add Card */
-        .add-card {
-            background: rgba(255, 255, 255, 0.5);
-            border: 2px dashed var(--lila);
-            border-radius: 16px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            min-height: 200px;
-            color: var(--lila);
-            transition: all 0.3s;
-            cursor: pointer;
-        }
-        .add-card:hover {
-            background: var(--lila);
-            color: var(--blanco);
-            border-color: var(--lila);
         }
 
-        /* Buttons */
-        .btn-primary-custom {
-            background: linear-gradient(135deg, var(--rojo-atardecer), var(--naranja-turquesa));
-            border: none;
-            color: var(--blanco);
-            font-weight: 600;
-            padding: 10px 24px;
-            border-radius: 10px;
-            transition: all 0.2s;
-        }
-        .btn-primary-custom:hover {
-            transform: scale(1.02);
-            box-shadow: 0 4px 12px rgba(255, 90, 60, 0.4);
-            color: var(--blanco);
-        }
+        .btn-edit { background-color: var(--lila); color: white; }
+        .btn-edit:hover { background-color: #b19ee8; color: white; }
+        .btn-delete { background-color: var(--rojo-atardecer); color: white; }
+        .btn-delete:hover { background-color: #e04b50; color: white; }
 
-        /* Empty State */
         .empty-state {
             text-align: center;
-            padding: 4rem 2rem;
+            padding: 4rem 1rem;
             color: var(--gris);
         }
+
         .empty-state i {
             font-size: 4rem;
-            color: var(--lila);
+            color: var(--celeste);
             margin-bottom: 1rem;
         }
 
-        /* Modal Custom */
+        /* Modal Styles */
         .modal-content {
-            border-radius: 16px;
+            border-radius: 15px;
             border: none;
         }
         .modal-header {
-            background: linear-gradient(135deg, var(--rojo-atardecer), var(--naranja-turquesa));
-            color: var(--blanco);
-            border-radius: 16px 16px 0 0;
+            background-color: var(--turquesa);
+            color: white;
+            border-bottom: none;
+            border-radius: 15px 15px 0 0;
         }
         .modal-header .btn-close {
-            filter: brightness(0) invert(1);
+            filter: invert(1) grayscale(100%) brightness(200%);
         }
-        .form-control:focus {
-            border-color: var(--celeste);
-            box-shadow: 0 0 0 0.25rem rgba(125, 211, 252, 0.25);
+        .btn-save {
+            background-color: var(--turquesa);
+            border: none;
+            color: white;
+            font-weight: 600;
+        }
+        .btn-save:hover {
+            background-color: var(--celeste);
+            color: var(--turquesa);
         }
     </style>
 </head>
 <body>
 
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-custom mb-4">
+    <nav class="navbar navbar-expand-lg sticky-top">
         <div class="container">
-            <a class="navbar-brand d-flex align-items-center" href="#">
-                <i class="bi bi-grid-1x2-fill me-2"></i> NexusBoard
-            </a>
-            <div class="d-flex align-items-center">
-                <span class="badge bg-light text-dark rounded-pill px-3 py-2">
-                    <i class="bi bi-cloud-check-fill text-success me-1"></i> Sincronizado
-                </span>
-            </div>
+            <a class="navbar-brand" href="#">Nexus<span>Board</span></a>
+            <button class="btn btn-add-module" data-bs-toggle="modal" data-bs-target="#moduleModal" onclick="openModal('crear')">
+                <i class="bi bi-plus-lg me-1"></i> Nuevo Módulo
+            </button>
         </div>
     </nav>
 
-    <div class="container mb-5">
-        <!-- Storage Stats -->
-        <div class="card storage-card mb-4 p-4">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-database-fill me-2"></i>Capacidad de Google Sheets</h6>
-                <span id="storageText" class="fw-bold" style="color: var(--rojo-atardecer);">Cargando...</span>
+    <!-- Main Content -->
+    <main class="container my-5">
+        <div class="row mb-4">
+            <div class="col">
+                <h2 class="fw-bold mb-1">Panel de Control</h2>
+                <p class="text-muted">Gestiona y accede a los módulos de tu sistema.</p>
             </div>
-            <div class="progress progress-custom">
-                <div id="storageBar" class="progress-bar progress-bar-custom" role="progressbar" style="width: 0%"></div>
-            </div>
-            <small class="text-muted mt-1 d-block">*El límite estándar de Google Sheets es de 10,000,000 de celdas.</small>
         </div>
 
-        <!-- Modules Grid -->
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h4 class="fw-bold text-dark mb-0">Módulos del Sistema</h4>
-        </div>
-        
-        <div class="row g-4" id="modulesGrid">
+        <div id="modulesGrid" class="row g-4">
             <!-- Las tarjetas se inyectan aquí -->
-            <div class="col-12 text-center py-5" id="loadingState">
-                <div class="spinner-border text-danger" role="status">
-                    <span class="visually-hidden">Cargando...</span>
-                </div>
-                <p class="mt-2 text-muted">Cargando módulos desde la nube...</p>
-            </div>
         </div>
-    </div>
+
+        <div id="emptyState" class="empty-state d-none">
+            <i class="bi bi-grid-3x3-gap-fill"></i>
+            <h4>No hay módulos creados</h4>
+            <p>Haz clic en "Nuevo Módulo" para comenzar a construir tu NexusBoard.</p>
+        </div>
+    </main>
 
     <!-- Modal Crear/Editar -->
     <div class="modal fade" id="moduleModal" tabindex="-1">
@@ -242,47 +229,57 @@
                     <h5 class="modal-title" id="modalTitle">Nuevo Módulo</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body p-4">
+                <div class="modal-body">
                     <form id="moduleForm">
                         <input type="hidden" id="moduleId">
+                        <input type="hidden" id="formAction">
+                        
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Emoji del Módulo</label>
-                            <input type="text" class="form-control form-control-lg text-center" id="moduleEmoji" placeholder="🚀" maxlength="2" required>
+                            <label class="form-label fw-semibold">Emoji del Módulo</label>
+                            <input type="text" class="form-control" id="moduleEmoji" placeholder="Ej: 📊, 📦, 👥" maxlength="2" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Título</label>
-                            <input type="text" class="form-control" id="moduleTitle" placeholder="Ej: Gestión de Usuarios" required>
+                            <label class="form-label fw-semibold">Título</label>
+                            <input type="text" class="form-control" id="moduleTitle" placeholder="Nombre del módulo" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Descripción</label>
-                            <textarea class="form-control" id="moduleDesc" rows="2" placeholder="Breve descripción del módulo..." required></textarea>
+                            <label class="form-label fw-semibold">Descripción</label>
+                            <textarea class="form-control" id="moduleDesc" rows="2" placeholder="Breve descripción" required></textarea>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-bold">URL de la Página</label>
-                            <input type="url" class="form-control" id="moduleUrl" placeholder="https://tusitio.com/pagina" required>
+                            <label class="form-label fw-semibold">URL de la Página</label>
+                            <input type="text" class="form-control" id="moduleUrl" placeholder="Ej: inventario.html" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Límite de Filas (Memoria)</label>
+                            <input type="number" class="form-control" id="moduleLimit" placeholder="Ej: 50000" value="50000" required>
+                            <div class="form-text">Filas máximas permitidas en la hoja de cálculo de este módulo.</div>
                         </div>
                     </form>
                 </div>
-                <div class="modal-footer border-0">
+                <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary-custom" onclick="saveModule()">Guardar Módulo</button>
+                    <button type="button" class="btn btn-save" onclick="saveModule()">Guardar Módulo</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal Confirmar Eliminación -->
+    <!-- Modal Confirmar Borrado -->
     <div class="modal fade" id="deleteModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-sm">
             <div class="modal-content">
-                <div class="modal-body text-center p-4">
-                    <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 3rem;"></i>
-                    <h5 class="mt-3 fw-bold">¿Eliminar módulo?</h5>
-                    <p class="text-muted">Esta acción no se puede deshacer.</p>
-                    <div class="d-flex gap-2 justify-content-center mt-3">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Eliminar</button>
-                    </div>
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">Confirmar Eliminación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <i class="bi bi-exclamation-triangle-fill text-warning fs-1"></i>
+                    <p class="mt-3 mb-0">¿Estás seguro de que deseas borrar este módulo? Esta acción no se puede deshacer.</p>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Borrar</button>
                 </div>
             </div>
         </div>
@@ -290,233 +287,199 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
+    
     <script>
-        // ==========================================
-        // CONFIGURACIÓN
-        // ==========================================
-        // PEGA AQUÍ LA URL DE TU APPS SCRIPT WEB APP
-        const API_URL = "https://script.google.com/macros/s/AQUI_TU_URL/exec"; 
-        
-        const STORAGE_KEY = "nexusboard_modules_v1";
-        const STORAGE_STATS = "nexusboard_stats_v1";
+        // --- CONFIGURACIÓN ---
+        // PEGA AQUÍ LA URL DE APPS SCRIPT TERMINADA EN /exec
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/TU_ID_AQUI/exec';
+        const STORAGE_KEY = 'nexusboard_modulos';
 
-        let modules = [];
-        let currentEditId = null;
-
-        // ==========================================
-        // INICIALIZACIÓN
-        // ==========================================
+        // --- INICIALIZACIÓN ---
         document.addEventListener('DOMContentLoaded', () => {
-            loadData();
+            loadModules();
         });
 
-        async function loadData() {
-            // 1. Cargar desde localStorage para renderizado instantáneo
-            const cachedModules = localStorage.getItem(STORAGE_KEY);
-            const cachedStats = localStorage.getItem(STORAGE_STATS);
-
-            if (cachedModules) {
-                modules = JSON.parse(cachedModules);
-                renderModules();
-            }
-            if (cachedStats) {
-                renderStats(JSON.parse(cachedStats));
-            }
-
-            // 2. Sincronizar con la API
-            await syncData();
-        }
-
-        async function syncData() {
-            try {
-                // Fetch Módulos
-                const resMod = await fetch(`${API_URL}?action=getModulos`);
-                const dataMod = await resMod.json();
-                
-                if (dataMod.success) {
-                    modules = dataMod.data;
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(modules));
-                    renderModules();
-                }
-
-                // Fetch Stats
-                const resStats = await fetch(`${API_URL}?action=getStats`);
-                const dataStats = await resStats.json();
-                
-                if (dataStats.success) {
-                    localStorage.setItem(STORAGE_STATS, JSON.stringify(dataStats.data));
-                    renderStats(dataStats.data);
-                }
-            } catch (error) {
-                console.error('Error al sincronizar:', error);
-                document.getElementById('loadingState').innerHTML = `
-                    <div class="empty-state">
-                        <i class="bi bi-wifi-off"></i>
-                        <h5>Error de conexión</h5>
-                        <p>No se pudo conectar con Google Sheets. Revisa tu URL o conexión.</p>
-                    </div>`;
-            }
-        }
-
-        // ==========================================
-        // RENDERIZADO
-        // ==========================================
-        function renderModules() {
-            const grid = document.getElementById('modulesGrid');
-            grid.innerHTML = '';
-
-            if (modules.length === 0) {
-                grid.innerHTML = `
-                    <div class="col-12">
-                        <div class="empty-state">
-                            <i class="bi bi-box-seam"></i>
-                            <h5>No hay módulos creados</h5>
-                            <p class="mb-3">Comienza creando tu primer módulo para acceder a las herramientas.</p>
-                        </div>
-                    </div>`;
+        // --- CARGA DE DATOS (LOCALSTORAGE + FETCH) ---
+        function loadModules() {
+            // 1. Carga optimista desde LocalStorage
+            const localData = localStorage.getItem(STORAGE_KEY);
+            if (localData) {
+                renderModules(JSON.parse(localData));
             } else {
-                modules.forEach(mod => {
-                    const card = `
-                        <div class="col-md-6 col-lg-4">
-                            <div class="module-card" onclick="navigateTo('${mod.URL_Pagina}')">
-                                <div class="card-actions">
-                                    <button class="btn-action btn-edit" onclick="editModule(event, '${mod.ID}')" title="Editar">
-                                        <i class="bi bi-pencil-fill"></i>
-                                    </button>
-                                    <button class="btn-action btn-delete" onclick="confirmDelete(event, '${mod.ID}')" title="Eliminar">
-                                        <i class="bi bi-trash-fill"></i>
-                                    </button>
-                                </div>
-                                <div class="card-body">
-                                    <span class="module-emoji">${mod.Emoji}</span>
-                                    <h5 class="module-title">${mod.Titulo}</h5>
-                                    <p class="module-desc">${mod.Descripcion}</p>
-                                    <div class="d-flex align-items-center text-muted small">
-                                        <i class="bi bi-link-45deg me-1"></i> Ir al módulo
+                showEmptyState(true);
+            }
+
+            // 2. Sincronización en segundo plano
+            fetch(APPS_SCRIPT_URL)
+                .then(response => response.json())
+                .then(result => {
+                    if (result.status === 'success') {
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify(result.data));
+                        renderModules(result.data);
+                    }
+                })
+                .catch(error => console.error('Error al sincronizar con la DB:', error));
+        }
+
+        // --- RENDERIZADO ---
+        function renderModules(modules) {
+            const grid = document.getElementById('modulesGrid');
+            const emptyState = document.getElementById('emptyState');
+            
+            grid.innerHTML = '';
+            
+            if (!modules || modules.length === 0) {
+                showEmptyState(true);
+                return;
+            }
+            
+            showEmptyState(false);
+
+            modules.forEach(mod => {
+                const porcentaje = mod.Limite_Filas > 0 ? (mod.Filas_Usadas / mod.Limite_Filas) * 100 : 0;
+                let barClass = 'progress-bar-low';
+                if (porcentaje > 80) barClass = 'progress-bar-high';
+                else if (porcentaje > 50) barClass = 'progress-bar-med';
+
+                const cardHTML = `
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card module-card" onclick="navigateToModule('${mod.URL_Pagina}')">
+                            <div class="card-actions">
+                                <button class="btn-action btn-edit" onclick="event.stopPropagation(); openModal('editar', '${mod.ID}')" title="Editar">
+                                    <i class="bi bi-pencil-fill"></i>
+                                </button>
+                                <button class="btn-action btn-delete" onclick="event.stopPropagation(); confirmDelete('${mod.ID}')" title="Borrar">
+                                    <i class="bi bi-trash-fill"></i>
+                                </button>
+                            </div>
+                            <div class="card-body-custom">
+                                <div class="card-emoji">${mod.Emoji}</div>
+                                <h5 class="card-title-custom">${mod.Titulo}</h5>
+                                <p class="card-text-custom">${mod.Descripcion}</p>
+                                
+                                <div class="storage-section">
+                                    <div class="d-flex justify-content-between storage-label">
+                                        <span>Almacenamiento</span>
+                                        <span>${formatNumber(mod.Filas_Usadas)} / ${formatNumber(mod.Limite_Filas)}</span>
+                                    </div>
+                                    <div class="progress">
+                                        <div class="progress-bar ${barClass}" role="progressbar" style="width: ${porcentaje}%"></div>
                                     </div>
                                 </div>
                             </div>
-                        </div>`;
-                    grid.innerHTML += card;
-                });
-            }
-
-            // Agregar tarjeta de "Añadir"
-            grid.innerHTML += `
-                <div class="col-md-6 col-lg-4">
-                    <div class="add-card" data-bs-toggle="modal" data-bs-target="#moduleModal" onclick="openCreateModal()">
-                        <i class="bi bi-plus-lg" style="font-size: 2.5rem;"></i>
-                        <span class="fw-bold mt-2">Añadir Módulo</span>
+                        </div>
                     </div>
-                </div>`;
+                `;
+                grid.innerHTML += cardHTML;
+            });
         }
 
-        function renderStats(stats) {
-            const bar = document.getElementById('storageBar');
-            const text = document.getElementById('storageText');
-            
-            bar.style.width = `${stats.percentage}%`;
-            text.textContent = `${stats.readableUsed} / ${stats.readableTotal} Celdas (${stats.percentage}%)`;
-
-            if (stats.percentage > 80) {
-                bar.classList.add('warning');
-            } else {
-                bar.classList.remove('warning');
-            }
+        function showEmptyState(show) {
+            document.getElementById('emptyState').classList.toggle('d-none', !show);
         }
 
-        // ==========================================
-        // ACCIONES CRUD
-        // ==========================================
-        function navigateTo(url) {
-            if (url && url !== 'undefined') {
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+        function navigateToModule(url) {
+            if(url && url !== '') {
                 window.location.href = url;
             }
         }
 
-        function openCreateModal() {
-            currentEditId = null;
-            document.getElementById('modalTitle').textContent = 'Nuevo Módulo';
+        // --- MODAL Y FORMULARIO ---
+        function openModal(action, id = null) {
+            document.getElementById('formAction').value = action;
             document.getElementById('moduleForm').reset();
-            document.getElementById('moduleEmoji').value = '🚀';
-        }
-
-        function editModule(event, id) {
-            event.stopPropagation(); // Evitar que se navegue
-            currentEditId = id;
-            const mod = modules.find(m => m.ID === id);
+            document.getElementById('moduleLimit').value = 50000;
             
-            document.getElementById('modalTitle').textContent = 'Editar Módulo';
-            document.getElementById('moduleId').value = mod.ID;
-            document.getElementById('moduleEmoji').value = mod.Emoji;
-            document.getElementById('moduleTitle').value = mod.Titulo;
-            document.getElementById('moduleDesc').value = mod.Descripcion;
-            document.getElementById('moduleUrl').value = mod.URL_Pagina;
-
-            new bootstrap.Modal(document.getElementById('moduleModal')).show();
+            if (action === 'crear') {
+                document.getElementById('modalTitle').innerText = 'Nuevo Módulo';
+            } else if (action === 'editar' && id) {
+                document.getElementById('modalTitle').innerText = 'Editar Módulo';
+                const modules = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+                const mod = modules.find(m => m.ID === id);
+                if (mod) {
+                    document.getElementById('moduleId').value = mod.ID;
+                    document.getElementById('moduleEmoji').value = mod.Emoji;
+                    document.getElementById('moduleTitle').value = mod.Titulo;
+                    document.getElementById('moduleDesc').value = mod.Descripcion;
+                    document.getElementById('moduleUrl').value = mod.URL_Pagina;
+                    document.getElementById('moduleLimit').value = mod.Limite_Filas;
+                }
+            }
+            
+            const modal = new bootstrap.Modal(document.getElementById('moduleModal'));
+            modal.show();
         }
 
-        async function saveModule() {
-            const emoji = document.getElementById('moduleEmoji').value.trim();
-            const titulo = document.getElementById('moduleTitle').value.trim();
-            const descripcion = document.getElementById('moduleDesc').value.trim();
-            const url = document.getElementById('moduleUrl').value.trim();
+        function saveModule() {
+            const action = document.getElementById('formAction').value;
+            const payload = {
+                action: action,
+                titulo: document.getElementById('moduleTitle').value,
+                descripcion: document.getElementById('moduleDesc').value,
+                emoji: document.getElementById('moduleEmoji').value,
+                url: document.getElementById('moduleUrl').value,
+                limite_filas: parseInt(document.getElementById('moduleLimit').value)
+            };
 
-            if (!emoji || !titulo || !descripcion || !url) {
-                alert('Por favor, completa todos los campos.');
+            if (action === 'editar') {
+                payload.id = document.getElementById('moduleId').value;
+            }
+
+            // Validación básica
+            if(!payload.titulo || !payload.emoji || !payload.url) {
+                alert('Por favor, completa todos los campos obligatorios.');
                 return;
             }
 
-            const record = { emoji, titulo, descripcion, url };
-            let action = 'createModulo';
-
-            if (currentEditId) {
-                action = 'updateModulo';
-                record.id = currentEditId;
-            }
-
-            await sendRequest(action, record);
-            bootstrap.Modal.getInstance(document.getElementById('moduleModal')).hide();
-        }
-
-        function confirmDelete(event, id) {
-            event.stopPropagation();
-            const btn = document.getElementById('confirmDeleteBtn');
-            btn.onclick = () => deleteModule(id);
-            new bootstrap.Modal(document.getElementById('deleteModal')).show();
-        }
-
-        async function deleteModule(id) {
-            await sendRequest('deleteModulo', { id });
-            bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
-        }
-
-        // ==========================================
-        // COMUNICACIÓN CON API
-        // ==========================================
-        async function sendRequest(action, record) {
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'text/plain;charset=utf-8', // Evita problemas de CORS preflight
-                    },
-                    body: JSON.stringify({ action, record })
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    await syncData(); // Recargar datos para mantener todo actualizado
+            fetch(APPS_SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    bootstrap.Modal.getInstance(document.getElementById('moduleModal')).hide();
+                    loadModules(); // Recargar para traer datos frescos
                 } else {
-                    alert('Error: ' + result.message);
+                    alert('Error al guardar: ' + result.message);
                 }
-            } catch (error) {
-                console.error(error);
-                alert('Error de conexión con el servidor.');
-            }
+            })
+            .catch(error => console.error('Error:', error));
         }
+
+        // --- BORRAR ---
+        let deleteId = null;
+        function confirmDelete(id) {
+            deleteId = id;
+            const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            modal.show();
+        }
+
+        document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
+            if (deleteId) {
+                const payload = {
+                    action: 'borrar',
+                    id: deleteId
+                };
+
+                fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.status === 'success') {
+                        bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+                        loadModules();
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        });
     </script>
 </body>
 </html>
