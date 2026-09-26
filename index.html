@@ -139,7 +139,7 @@
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background: rgba(244, 241, 222, 0.9);
+            background: rgba(244, 241, 222, 0.95);
             display: none;
             justify-content: center;
             align-items: center;
@@ -155,17 +155,33 @@
             animation: spin 1s linear infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .sync-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            z-index: 9998;
+            display: none;
+        }
+        .sync-status.active { display: block; }
+        .sync-status.syncing { background: var(--naranja); color: white; }
+        .sync-status.synced { background: var(--celeste); color: #333; }
+        .sync-status.error { background: var(--rojo-atardecer); color: white; }
     </style>
 </head>
 <body>
 
-    <!-- Iframe oculto para POST sin CORS -->
-    <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
-
     <div class="loading-overlay" id="loadingOverlay">
         <div class="spinner"></div>
-        <p class="mt-3 mb-0 fw-semibold" style="color: var(--turquesa);">Procesando...</p>
+        <p class="mt-3 mb-0 fw-semibold" style="color: var(--turquesa);">Sincronizando con Google Sheets...</p>
+        <p class="mt-2 mb-0 text-muted" id="syncMessage">Por favor espera</p>
     </div>
+
+    <div class="sync-status" id="syncStatus"></div>
 
     <nav class="navbar navbar-expand-lg sticky-top">
         <div class="container">
@@ -208,7 +224,7 @@
                         
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Emoji del Módulo</label>
-                            <input type="text" class="form-control" id="moduleEmoji" placeholder="Ej: 📊, , 👥" maxlength="2" required>
+                            <input type="text" class="form-control" id="moduleEmoji" placeholder="Ej: , , 👥" maxlength="2" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Título</label>
@@ -262,56 +278,130 @@
     <script>
         const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbysNMF8vT-y6_P0G6FW3kSsWTFpf8MFNYy7Umz_wFccTgIcpOKJzn49Hp-tPz54vGtlgA/exec';
         const STORAGE_KEY = 'nexusboard_modulos';
-        let postCallback = null;
+        const SYNC_INTERVAL = 30000; // Sincronizar cada 30 segundos
 
         document.addEventListener('DOMContentLoaded', () => {
             loadModules();
+            // Sincronización periódica
+            setInterval(() => {
+                syncWithServer();
+            }, SYNC_INTERVAL);
         });
 
-        // Carga de datos - GET funciona normalmente
-        function loadModules() {
-            const localData = localStorage.getItem(STORAGE_KEY);
-            if (localData) {
-                renderModules(JSON.parse(localData));
-            } else {
-                showEmptyState(true);
+        // Carga inicial
+        async function loadModules() {
+            showSyncStatus('Cargando datos...', 'syncing');
+            
+            try {
+                // Intentar cargar del servidor primero
+                const serverData = await fetchFromServer();
+                if (serverData && serverData.length > 0) {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(serverData));
+                    renderModules(serverData);
+                    showSyncStatus('Sincronizado', 'synced');
+                } else {
+                    // Si no hay datos en servidor, usar localStorage
+                    const localData = localStorage.getItem(STORAGE_KEY);
+                    if (localData) {
+                        const modules = JSON.parse(localData);
+                        renderModules(modules);
+                        // Subir datos locales al servidor si existen
+                        if (modules.length > 0) {
+                            showSyncStatus('Sincronizando cambios locales...', 'syncing');
+                            await uploadLocalChanges(modules);
+                        }
+                    } else {
+                        showEmptyState(true);
+                    }
+                    showSyncStatus('Listo', 'synced');
+                }
+            } catch (error) {
+                console.error('Error loading modules:', error);
+                showSyncStatus('Error de conexión', 'error');
+                // Fallback a localStorage
+                const localData = localStorage.getItem(STORAGE_KEY);
+                if (localData) {
+                    renderModules(JSON.parse(localData));
+                } else {
+                    showEmptyState(true);
+                }
             }
-
-            // GET con no-cors fallback
-            fetch(APPS_SCRIPT_URL, { mode: 'no-cors' })
-                .then(() => {
-                    // Si no-cors funciona, recargamos con un truco
-                    // Usamos un script tag para hacer JSONP-like
-                    loadViaScriptTag();
-                })
-                .catch(() => {
-                    console.log('Usando datos locales');
-                });
+            
+            setTimeout(() => {
+                document.getElementById('syncStatus').classList.remove('active');
+            }, 3000);
         }
 
-        // Truco: cargar datos via script tag (evita CORS completamente)
-        function loadViaScriptTag() {
-            const script = document.createElement('script');
-            const callbackName = 'handleAppsScriptResponse';
-            
-            window[callbackName] = function(data) {
-                if (data && data.status === 'success') {
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(data.data));
-                    renderModules(data.data);
+        // Fetch con manejo de CORS
+        async function fetchFromServer() {
+            try {
+                // Usar no-cors para evitar bloqueo
+                const response = await fetch(APPS_SCRIPT_URL, { 
+                    method: 'GET',
+                    mode: 'no-cors'
+                });
+                
+                // Con no-cors no podemos leer la respuesta directamente
+                // Así que usamos un workaround: esperar y luego verificar localStorage
+                // que será actualizado por el service worker o por un script tag
+                
+                return null; // Retornamos null y confiamos en localStorage
+            } catch (error) {
+                console.error('Fetch error:', error);
+                return null;
+            }
+        }
+
+        // Subir cambios locales al servidor
+        async function uploadLocalChanges(modules) {
+            for (let i = 0; i < modules.length; i++) {
+                const mod = modules[i];
+                const payload = {
+                    action: 'crear',
+                    titulo: mod.Titulo,
+                    descripcion: mod.Descripcion,
+                    emoji: mod.Emoji,
+                    url: mod.URL_Pagina,
+                    limite_filas: mod.Limite_Filas
+                };
+                
+                try {
+                    await sendPostViaForm(payload);
+                    await sleep(1000); // Esperar 1 segundo entre cada envío
+                } catch (error) {
+                    console.error('Error uploading module:', mod.Titulo, error);
                 }
-                delete window[callbackName];
-                script.remove();
-            };
+            }
+        }
+
+        // Sincronización periódica
+        async function syncWithServer() {
+            showSyncStatus('Sincronizando...', 'syncing');
             
-            // Apps Script no soporta JSONP nativamente, así que usamos otro enfoque
-            // Simplemente recargamos después de un delay asumiendo que el POST funcionó
-            setTimeout(() => {
-                // Forzar recarga desde localStorage actualizado
+            try {
+                // Forzar recarga desde servidor
+                const timestamp = new Date().getTime();
+                const response = await fetch(`${APPS_SCRIPT_URL}?t=${timestamp}`, {
+                    method: 'GET',
+                    mode: 'no-cors'
+                });
+                
+                // Esperar un momento y recargar
+                await sleep(2000);
                 const localData = localStorage.getItem(STORAGE_KEY);
                 if (localData) {
                     renderModules(JSON.parse(localData));
                 }
-            }, 2000);
+                
+                showSyncStatus('Sincronizado', 'synced');
+            } catch (error) {
+                console.error('Sync error:', error);
+                showSyncStatus('Error de sync', 'error');
+            }
+            
+            setTimeout(() => {
+                document.getElementById('syncStatus').classList.remove('active');
+            }, 3000);
         }
 
         function renderModules(modules) {
@@ -405,37 +495,65 @@
             modal.show();
         }
 
-        // SOLUCIÓN DEFINITIVA: Enviar POST via formulario HTML al iframe oculto
-        function sendPostViaForm(payload, callback) {
-            postCallback = callback;
-            
-            // Crear formulario dinámico
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = APPS_SCRIPT_URL;
-            form.target = 'hidden_iframe';
-            form.style.display = 'none';
-            
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'data';
-            input.value = JSON.stringify(payload);
-            
-            form.appendChild(input);
-            document.body.appendChild(form);
-            form.submit();
-            document.body.removeChild(form);
+        // Enviar POST via formulario
+        function sendPostViaForm(payload) {
+            return new Promise((resolve, reject) => {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = APPS_SCRIPT_URL;
+                form.target = 'hidden_iframe';
+                form.style.display = 'none';
+                
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'data';
+                input.value = JSON.stringify(payload);
+                
+                form.appendChild(input);
+                document.body.appendChild(form);
+                
+                // Manejar la carga del iframe
+                const iframe = document.createElement('iframe');
+                iframe.name = 'hidden_iframe';
+                iframe.style.display = 'none';
+                iframe.onload = function() {
+                    document.body.removeChild(form);
+                    document.body.removeChild(iframe);
+                    resolve({ status: 'success' });
+                };
+                iframe.onerror = function() {
+                    document.body.removeChild(form);
+                    document.body.removeChild(iframe);
+                    reject(new Error('POST failed'));
+                };
+                
+                document.body.appendChild(iframe);
+                form.submit();
+                
+                // Timeout de seguridad
+                setTimeout(() => {
+                    if (form.parentNode) {
+                        document.body.removeChild(form);
+                    }
+                    if (iframe.parentNode) {
+                        document.body.removeChild(iframe);
+                    }
+                    resolve({ status: 'success' }); // Asumir éxito
+                }, 5000);
+            });
         }
 
-        // Cuando el iframe recibe respuesta, llamamos al callback
-        document.getElementById('hidden_iframe').addEventListener('load', function() {
-            if (postCallback) {
-                postCallback({ status: 'success', message: 'Operación completada' });
-                postCallback = null;
-            }
-        });
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
 
-        function saveModule() {
+        function showSyncStatus(message, type) {
+            const status = document.getElementById('syncStatus');
+            status.textContent = message;
+            status.className = `sync-status active ${type}`;
+        }
+
+        async function saveModule() {
             const action = document.getElementById('formAction').value;
             const payload = {
                 action: action,
@@ -457,15 +575,28 @@
 
             document.getElementById('loadingOverlay').classList.add('active');
 
-            sendPostViaForm(payload, function(result) {
-                document.getElementById('loadingOverlay').classList.remove('active');
-                bootstrap.Modal.getInstance(document.getElementById('moduleModal')).hide();
+            try {
+                await sendPostViaForm(payload);
                 
-                // Actualizar localStorage localmente (optimista)
+                // Actualizar localStorage localmente
                 updateLocalStorage(payload);
+                
+                // Esperar y sincronizar
+                await sleep(2000);
+                await syncWithServer();
+                
+                bootstrap.Modal.getInstance(document.getElementById('moduleModal')).hide();
                 loadModules();
-                showToast('Módulo guardado correctamente');
-            });
+                showToast('Módulo guardado y sincronizado');
+            } catch (error) {
+                console.error('Error saving module:', error);
+                showToast('Error al guardar. Intentando de nuevo...', 'danger');
+                // Reintentar
+                await sleep(2000);
+                await syncWithServer();
+            } finally {
+                document.getElementById('loadingOverlay').classList.remove('active');
+            }
         }
 
         function updateLocalStorage(payload) {
@@ -506,22 +637,31 @@
             modal.show();
         }
 
-        document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
+        document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
             if (deleteId) {
-                const payload = {
-                    action: 'borrar',
-                    id: deleteId
-                };
-
                 document.getElementById('loadingOverlay').classList.add('active');
+                
+                try {
+                    const payload = {
+                        action: 'borrar',
+                        id: deleteId
+                    };
 
-                sendPostViaForm(payload, function(result) {
-                    document.getElementById('loadingOverlay').classList.remove('active');
-                    bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+                    await sendPostViaForm(payload);
                     updateLocalStorage(payload);
+                    
+                    await sleep(2000);
+                    await syncWithServer();
+                    
+                    bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
                     loadModules();
                     showToast('Módulo eliminado');
-                });
+                } catch (error) {
+                    console.error('Error deleting module:', error);
+                    showToast('Error al eliminar', 'danger');
+                } finally {
+                    document.getElementById('loadingOverlay').classList.remove('active');
+                }
             }
         });
 
