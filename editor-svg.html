@@ -320,22 +320,32 @@
             background: var(--amarillo-hueso);
         }
 
-        .nav-tabs-custom {
-            border-bottom: 2px solid var(--turquesa);
-            margin-bottom: 15px;
-        }
-
-        .nav-tabs-custom .nav-link {
-            color: var(--gris);
+        .btn-auto-generate {
+            background: var(--naranja);
+            color: white;
             border: none;
-            border-bottom: 3px solid transparent;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
             font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 10px;
         }
 
-        .nav-tabs-custom .nav-link.active {
-            color: var(--turquesa);
-            border-bottom-color: var(--turquesa);
-            background: transparent;
+        .btn-auto-generate:hover {
+            background: #e07500;
+        }
+
+        .plantilla-preview {
+            background: var(--dark-bg);
+            color: #f8f8f2;
+            padding: 10px;
+            border-radius: 6px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            white-space: pre-wrap;
+            word-break: break-all;
         }
     </style>
 </head>
@@ -541,15 +551,24 @@
                     </div>
                     
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Código Plantilla</label>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label fw-semibold mb-0">Código Plantilla</label>
+                            <button type="button" class="btn-auto-generate" onclick="autoGenerarPlantilla()">
+                                <i class="bi bi-magic me-1"></i> Auto-generar plantilla
+                            </button>
+                        </div>
                         <textarea class="form-control font-monospace" id="funcionCodigo" rows="6" 
                             placeholder='<rect x="{{x}}" y="{{y}}" width="{{width}}" height="{{height}}" fill="{{fill}}" />' required></textarea>
                         <div class="form-text mt-2">
-                            <strong>Propiedades seleccionadas:</strong>
-                            <div id="propiedadesDisponibles" class="mt-1">
-                                <span class="text-muted">Selecciona propiedades arriba</span>
-                            </div>
-                            <div class="mt-2">Haz clic en una propiedad para insertar <code>{{nombre}}</code> en el código</div>
+                            <strong>Formato correcto:</strong> Usa <code>nombre="{{nombre_propiedad}}"</code> para atributos SVG
+                        </div>
+                        <div id="plantillaPreview" class="plantilla-preview" style="display: none;"></div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Insertar propiedad en el código:</label>
+                        <div id="propiedadesDisponibles">
+                            <span class="text-muted">Selecciona propiedades arriba</span>
                         </div>
                     </div>
                 </div>
@@ -640,7 +659,7 @@
         let blocklyInitialized = false;
         let selectedPropIds = [];
 
-        // ============ REGISTRO DE BLOQUE BLOCKLY (ANTES DE INIT) ============
+        // ============ REGISTRO DE BLOQUE BLOCKLY ============
         Blockly.Blocks['funcion_svg'] = {
             init: function() {
                 const funcId = this.getFieldValue('FUNC_ID');
@@ -648,7 +667,6 @@
                 if (func) {
                     this.appendDummyInput().appendField(`${func.Icono || '🔷'} ${func.Nombre}`);
                     
-                    // Obtener propiedades de esta función
                     const propIds = (func.PropiedadesIDs || '').split(',').filter(id => id.trim());
                     const funcProps = propIds.map(id => propiedades.find(p => p.ID === id)).filter(p => p);
                     
@@ -727,14 +745,12 @@
                 document.getElementById('cursorPosition').textContent = `Ln ${pos.line + 1}, Col ${pos.ch + 1}`;
             });
 
-            // Autocompletado SOLO con funciones guardadas
             CodeMirror.registerHelper('hint', 'xml', (editor) => {
                 const cur = editor.getCursor();
                 const token = editor.getTokenAt(cur);
                 const text = token.string;
                 const suggestions = [];
 
-                // SOLO funciones guardadas, NO etiquetas SVG estándar
                 funciones.forEach(func => {
                     const nombre = func.Nombre.toLowerCase();
                     if (text === '' || nombre.includes(text.toLowerCase())) {
@@ -826,7 +842,6 @@
             }
         }
 
-        // ============ CARGA DE DATOS CON TIMEOUT ============
         async function cargarDatos() {
             document.getElementById('loadingOverlay').classList.add('active');
 
@@ -843,7 +858,6 @@
                 cargarProyectoEnEditor(proyectoActual);
             }
 
-            // Fetch con timeout
             const fetchWithTimeout = (url, timeout = 8000) => {
                 return Promise.race([
                     fetch(url),
@@ -1259,6 +1273,7 @@
             document.getElementById('funcionCodigo').value = '';
             document.getElementById('formFuncionTitle').textContent = 'Nueva Función';
             selectedPropIds = [];
+            document.getElementById('plantillaPreview').style.display = 'none';
 
             renderPropiedadSelector();
 
@@ -1273,12 +1288,12 @@
                     selectedPropIds = (func.PropiedadesIDs || '').split(',').filter(pid => pid.trim());
                     renderPropiedadSelector();
                     document.getElementById('formFuncionTitle').textContent = 'Editar Función';
+                    actualizarPropiedadesDisponibles();
                 }
             }
             
             bootstrap.Modal.getInstance(document.getElementById('modalFunciones')).hide();
             new bootstrap.Modal(document.getElementById('modalFormFuncion')).show();
-            actualizarPropiedadesDisponibles();
         }
 
         function renderPropiedadSelector() {
@@ -1341,7 +1356,44 @@
             textarea.value = value.substring(0, start) + placeholder + value.substring(end);
             textarea.selectionStart = textarea.selectionEnd = start + placeholder.length;
             textarea.focus();
+            actualizarPreviewPlantilla();
         }
+
+        function autoGenerarPlantilla() {
+            const selectedProps = selectedPropIds.map(id => propiedades.find(p => p.ID === id)).filter(p => p);
+            
+            if (selectedProps.length === 0) {
+                alert('Selecciona al menos una propiedad primero');
+                return;
+            }
+            
+            // Generar plantilla con formato correcto: nombre="{{nombre}}"
+            const atributos = selectedProps.map(prop => `${prop.Nombre}="{{${prop.Nombre}}}"`).join(' ');
+            const plantilla = `<elemento ${atributos} />`;
+            
+            document.getElementById('funcionCodigo').value = plantilla;
+            actualizarPreviewPlantilla();
+            showToast('Plantilla auto-generada. Edita "elemento" por el tag SVG que necesites (rect, circle, etc.)');
+        }
+
+        function actualizarPreviewPlantilla() {
+            const codigo = document.getElementById('funcionCodigo').value;
+            const preview = document.getElementById('plantillaPreview');
+            
+            if (codigo.trim()) {
+                preview.textContent = codigo;
+                preview.style.display = 'block';
+            } else {
+                preview.style.display = 'none';
+            }
+        }
+
+        // Actualizar preview cuando se escribe en el textarea
+        document.addEventListener('input', function(e) {
+            if (e.target && e.target.id === 'funcionCodigo') {
+                actualizarPreviewPlantilla();
+            }
+        });
 
         async function guardarFuncion() {
             const id = document.getElementById('funcionId').value;
