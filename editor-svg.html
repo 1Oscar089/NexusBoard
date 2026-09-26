@@ -7,7 +7,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     
-    <!-- CodeMirror -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.css">
@@ -127,6 +126,7 @@
             border: 1px solid #444;
             color: #f8f8f2;
             font-family: 'Fira Code', monospace;
+            z-index: 10000;
         }
         .CodeMirror-hint {
             color: #f8f8f2;
@@ -138,6 +138,7 @@
         }
         .cm-hint-func { color: var(--celeste); }
         .cm-hint-tag { color: var(--naranja); }
+        .cm-hint-prop { color: var(--lila); }
 
         #blocklyDiv {
             height: 100%;
@@ -289,30 +290,50 @@
         }
 
         /* Editor de propiedades mejorado */
-        .propiedad-item {
+        .propiedades-section {
             background: var(--blanco);
+            border: 2px solid var(--celeste);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .propiedades-section h6 {
+            color: var(--turquesa);
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .propiedad-item {
+            background: var(--amarillo-hueso);
             border: 1px solid #ddd;
             border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 10px;
+            padding: 10px;
+            margin-bottom: 8px;
             position: relative;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .propiedad-item input {
+            flex: 1;
         }
 
         .propiedad-item .btn-eliminar {
-            position: absolute;
-            top: 8px;
-            right: 8px;
             background: var(--rojo-atardecer);
             color: white;
             border: none;
             border-radius: 50%;
-            width: 24px;
-            height: 24px;
+            width: 28px;
+            height: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            font-size: 0.8rem;
+            font-size: 1.2rem;
+            line-height: 1;
+            flex-shrink: 0;
         }
 
         .propiedad-item .btn-eliminar:hover {
@@ -322,18 +343,63 @@
         .btn-agregar-propiedad {
             background: var(--celeste);
             color: var(--turquesa);
-            border: none;
+            border: 2px solid var(--turquesa);
             padding: 8px 16px;
             border-radius: 8px;
             font-weight: 600;
             cursor: pointer;
             width: 100%;
             margin-top: 10px;
+            transition: all 0.2s;
         }
 
         .btn-agregar-propiedad:hover {
             background: var(--turquesa);
             color: white;
+        }
+
+        .btn-insertar-prop {
+            background: var(--lila);
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+
+        .btn-insertar-prop:hover {
+            background: #b19ee8;
+        }
+
+        .codigo-plantilla-container {
+            position: relative;
+        }
+
+        .propiedades-disponibles {
+            background: var(--blanco);
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .prop-tag {
+            display: inline-block;
+            background: var(--lila);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin: 2px;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        .prop-tag:hover {
+            background: var(--turquesa);
         }
     </style>
 </head>
@@ -404,7 +470,7 @@
             <div class="preview-header">
                 <h6 class="preview-title"><i class="bi bi-eye me-2"></i>Vista Previa</h6>
                 <div class="d-flex gap-2">
-                    <button class="btn btn-sm btn-outline-secondary" onclick="formatearCodigo()" title="Formatear código (Varita Mágica)">
+                    <button class="btn btn-sm btn-outline-secondary" onclick="formatearCodigo()" title="Formatear código">
                         <i class="bi bi-magic"></i> Formatear
                     </button>
                     <button class="btn btn-sm btn-outline-secondary" onclick="toggleViewport()">
@@ -447,7 +513,7 @@
 
     <!-- Modal Formulario de Función -->
     <div class="modal fade" id="modalFormFuncion" tabindex="-1">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-xl">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="formFuncionTitle">Nueva Función</h5>
@@ -463,7 +529,7 @@
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label class="form-label fw-semibold">Icono</label>
-                                <input type="text" class="form-control" id="funcionIcono" placeholder="🔷" maxlength="2">
+                                <input type="text" class="form-control" id="funcionIcono" placeholder="" maxlength="2">
                             </div>
                         </div>
                         <div class="mb-3">
@@ -471,20 +537,26 @@
                             <input type="text" class="form-control" id="funcionCategoria" placeholder="Ej: Formas, Texto, Filtros" required>
                         </div>
                         
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Propiedades</label>
+                        <div class="propiedades-section">
+                            <h6><i class="bi bi-sliders me-2"></i>Propiedades (Variables)</h6>
                             <div id="propiedadesContainer"></div>
                             <button type="button" class="btn-agregar-propiedad" onclick="agregarPropiedad()">
                                 <i class="bi bi-plus-lg me-1"></i> Agregar Propiedad
                             </button>
-                            <div class="form-text mt-2">Agrega las propiedades que tendrá tu función. Usa $0 en el código para posicionar el cursor.</div>
+                            <div class="form-text mt-2">Agrega las variables que usará tu función. Cada una tendrá un nombre y valor por defecto.</div>
                         </div>
                         
-                        <div class="mb-3">
+                        <div class="mb-3 codigo-plantilla-container">
                             <label class="form-label fw-semibold">Código Plantilla</label>
-                            <textarea class="form-control font-monospace" id="funcionCodigo" rows="5" 
-                                placeholder='<rect x="{{x}}" y="{{y}}" width="{{width}}" height="{{height}}" fill="{{fill}}" />$0' required></textarea>
-                            <div class="form-text">Usa {{nombre_propiedad}} para insertar los valores. Añade $0 donde quieras que quede el cursor.</div>
+                            <textarea class="form-control font-monospace" id="funcionCodigo" rows="6" 
+                                placeholder='<rect x="{{x}}" y="{{y}}" width="{{width}}" height="{{height}}" fill="{{fill}}" />' required></textarea>
+                            <div class="form-text mt-2">
+                                <strong>Propiedades disponibles:</strong> 
+                                <div id="propiedadesDisponibles" class="propiedades-disponibles mt-1">
+                                    <span class="text-muted">Agrega propiedades arriba para verlas aquí</span>
+                                </div>
+                                <div class="mt-2">Haz clic en una propiedad para insertarla en el código como <code>{{nombre}}</code></div>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -547,7 +619,6 @@
         </div>
     </div>
 
-    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
@@ -576,7 +647,6 @@
         let uidCounter = 0;
         let viewportVisible = true;
         let blocklyInitialized = false;
-        let propiedadCounter = 0;
 
         document.addEventListener('DOMContentLoaded', () => {
             initCodeMirror();
@@ -598,10 +668,6 @@
                 extraKeys: {
                     'Ctrl-Space': 'autocomplete',
                     'Alt-Space': 'autocomplete',
-                    'Tab': function(cm) {
-                        // Intentar autocompletar si hay sugerencias
-                        CodeMirror.commands.autocomplete(cm);
-                    },
                     'Ctrl-Shift-F': () => formatearCodigo()
                 }
             });
@@ -609,26 +675,6 @@
             codeEditor.on('change', (cm, change) => {
                 actualizarPreview();
                 actualizarEstado();
-                
-                // Manejar $0 en autocompletado
-                if (change.origin === 'complete') {
-                    const inserted = change.text.join('\n');
-                    if (inserted.includes('$0')) {
-                        const lines = inserted.split('\n');
-                        const lastLine = lines[lines.length - 1];
-                        const indexInLastLine = lastLine.indexOf('$0');
-                        const cleanInserted = inserted.replace('$0', '');
-                        
-                        const from = { line: change.from.line, ch: change.from.ch };
-                        const to = { line: change.to.line, ch: change.to.ch };
-                        cm.replaceRange(cleanInserted, from, to);
-                        
-                        const newLine = change.from.line + lines.length - 1;
-                        const newCh = (lines.length === 1 ? change.from.ch : 0) + indexInLastLine;
-                        cm.setCursor(newLine, newCh);
-                        cm.focus();
-                    }
-                }
             });
 
             codeEditor.on('cursorActivity', () => {
@@ -636,66 +682,36 @@
                 document.getElementById('cursorPosition').textContent = `Ln ${pos.line + 1}, Col ${pos.ch + 1}`;
             });
 
-            // Autocompletado mejorado
+            // Autocompletado
             CodeMirror.registerHelper('hint', 'xml', (editor) => {
                 const cur = editor.getCursor();
                 const token = editor.getTokenAt(cur);
-                const line = editor.getLine(cur.line);
                 const text = token.string;
                 const suggestions = [];
 
-                // Etiquetas SVG estándar
                 const svgTags = ['svg', 'rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon', 'path', 'text', 'g', 'defs', 'use', 'clipPath', 'mask', 'filter', 'linearGradient', 'radialGradient', 'stop', 'pattern', 'image'];
                 svgTags.forEach(tag => {
                     if (tag.startsWith(text.toLowerCase()) || text === '' || text === '<') {
                         suggestions.push({ 
                             text: `<${tag}></${tag}>`, 
                             displayText: tag,
-                            className: 'cm-hint-tag',
-                            hint: function(cm, data, completion) {
-                                cm.replaceRange(completion.text, data.from, data.to);
-                                // Mover cursor entre las etiquetas
-                                const pos = cm.getCursor();
-                                cm.setCursor(pos.line, pos.ch - (tag.length + 3));
-                            }
+                            className: 'cm-hint-tag'
                         });
                     }
                 });
 
-                // Funciones personalizadas - SIEMPRE disponibles
                 funciones.forEach(func => {
                     const nombre = func.Nombre.toLowerCase();
-                    // Mostrar si el texto coincide o si está vacío
                     if (text === '' || text === '<' || nombre.includes(text.toLowerCase())) {
                         suggestions.push({ 
                             text: func.Codigo_Plantilla, 
                             displayText: `${func.Icono || '🔷'} ${func.Nombre}`,
-                            className: 'cm-hint-func',
-                            hint: function(cm, data, completion) {
-                                const inserted = completion.text;
-                                if (inserted.includes('$0')) {
-                                    const cleanInserted = inserted.replace('$0', '');
-                                    cm.replaceRange(cleanInserted, data.from, data.to);
-                                    
-                                    const lines = cleanInserted.split('\n');
-                                    const lastLine = lines[lines.length - 1];
-                                    const indexInLastLine = inserted.indexOf('$0');
-                                    
-                                    const newLine = data.from.line + lines.length - 1;
-                                    const newCh = (lines.length === 1 ? data.from.ch : 0) + indexInLastLine;
-                                    cm.setCursor(newLine, newCh);
-                                    cm.focus();
-                                } else {
-                                    cm.replaceRange(inserted, data.from, data.to);
-                                }
-                            }
+                            className: 'cm-hint-func'
                         });
                     }
                 });
 
-                if (suggestions.length === 0) {
-                    return null;
-                }
+                if (suggestions.length === 0) return null;
 
                 return {
                     list: suggestions,
@@ -704,7 +720,6 @@
                 };
             });
 
-            // Auto-trigger autocomplete al escribir
             codeEditor.on('inputRead', function(cm, change) {
                 if (change.origin === '+input' && change.text[0].match(/[a-zA-Z<]/)) {
                     setTimeout(() => {
@@ -792,8 +807,8 @@
 
             try {
                 const [resFunc, resProy] = await Promise.all([
-                    fetch(APPS_SCRIPT_URL + '?tipo=funciones', { method: 'GET', redirect: 'follow' }),
-                    fetch(APPS_SCRIPT_URL + '?tipo=proyectos', { method: 'GET', redirect: 'follow' })
+                    fetch(APPS_SCRIPT_URL + '?tipo=funciones'),
+                    fetch(APPS_SCRIPT_URL + '?tipo=proyectos')
                 ]);
 
                 if (resFunc.ok) {
@@ -813,21 +828,24 @@
                 }
 
                 actualizarToolbox();
-                showToast('Sincronizado correctamente');
             } catch (error) {
                 console.error('Error cargando datos:', error);
-                showToast('Error de sincronización, usando datos locales', 'warning');
-                actualizarToolbox();
             }
 
             document.getElementById('loadingOverlay').classList.remove('active');
         }
 
         function sendPostViaForm(payload) {
-            return new Promise((resolve) => {
+            return new Promise((resolve, reject) => {
                 const iframe = document.createElement('iframe');
-                iframe.name = 'hidden_post_frame_' + Date.now();
+                iframe.name = 'hidden_frame_' + Date.now();
                 iframe.style.display = 'none';
+                iframe.onload = () => {
+                    setTimeout(() => {
+                        cargarDatos().then(() => resolve({ status: 'success' }));
+                    }, 1000);
+                };
+                iframe.onerror = () => reject(new Error('POST failed'));
                 
                 const form = document.createElement('form');
                 form.method = 'POST';
@@ -843,26 +861,15 @@
                 form.appendChild(input);
                 document.body.appendChild(iframe);
                 document.body.appendChild(form);
-                
-                let resolved = false;
-                iframe.onload = function() {
-                    if (!resolved) {
-                        resolved = true;
-                        setTimeout(() => {
-                            cargarDatos().then(() => resolve({ status: 'success' }));
-                        }, 1500);
-                    }
-                };
                 form.submit();
                 
                 setTimeout(() => {
-                    if (!resolved) {
-                        resolved = true;
-                        cargarDatos().then(() => resolve({ status: 'success' }));
+                    if (iframe.parentNode) {
+                        document.body.removeChild(iframe);
+                        document.body.removeChild(form);
                     }
-                    if (form.parentNode) document.body.removeChild(form);
-                    if (iframe.parentNode) document.body.removeChild(iframe);
-                }, 8000);
+                    resolve({ status: 'success' });
+                }, 5000);
             });
         }
 
@@ -879,67 +886,6 @@
                     if (blocklyWorkspace) Blockly.svgResize(blocklyWorkspace);
                 }, 100);
             }
-        }
-
-        function registerBlocklyBlock() {
-            if (Blockly.Blocks['funcion_svg']) return;
-
-            Blockly.Blocks['funcion_svg'] = {
-                init: function() {
-                    const funcId = this.getFieldValue('FUNC_ID');
-                    const func = funciones.find(f => f.ID === funcId);
-                    if (func) {
-                        this.appendDummyInput().appendField(`${func.Icono || '🔷'} ${func.Nombre}`);
-                        try {
-                            const props = JSON.parse(func.Propiedades);
-                            props.forEach(prop => {
-                                if (prop.tipo === 'number') {
-                                    this.appendValueInput(prop.nombre.toUpperCase())
-                                        .setCheck('Number')
-                                        .appendField(prop.nombre);
-                                } else if (prop.tipo === 'color') {
-                                    this.appendValueInput(prop.nombre.toUpperCase())
-                                        .setCheck('Colour')
-                                        .appendField(prop.nombre);
-                                } else {
-                                    this.appendValueInput(prop.nombre.toUpperCase())
-                                        .appendField(prop.nombre);
-                                }
-                            });
-                        } catch (e) {
-                            console.error('Error parseando propiedades:', e);
-                        }
-                        this.setPreviousStatement(true, null);
-                        this.setNextStatement(true, null);
-                        this.setColour(getColorCategoria(func.Categoria));
-                        this.setTooltip(func.Codigo_Plantilla);
-                    }
-                }
-            };
-
-            Blockly.JavaScript['funcion_svg'] = function(block) {
-                const funcId = block.getFieldValue('FUNC_ID');
-                const func = funciones.find(f => f.ID === funcId);
-                if (!func) return '';
-                
-                try {
-                    const props = JSON.parse(func.Propiedades);
-                    let codigo = func.Codigo_Plantilla;
-                    const uid = 'el-' + (++uidCounter);
-                    
-                    props.forEach(prop => {
-                        const valor = Blockly.JavaScript.valueToCode(block, prop.nombre.toUpperCase(), Blockly.JavaScript.ORDER_ATOMIC) || prop.default || '';
-                        const regex = new RegExp(`\\{\\{${prop.nombre}\\}\\}`, 'g');
-                        codigo = codigo.replace(regex, valor.replace(/"/g, ''));
-                    });
-                    
-                    codigo = codigo.replace(/<([a-z]+)/i, `<$1 data-uid="${uid}"`);
-                    return codigo + '\n';
-                } catch (e) {
-                    console.error('Error generando código:', e);
-                    return '';
-                }
-            };
         }
 
         function getColorCategoria(cat) {
@@ -964,12 +910,18 @@
             const codigo = codeEditor.getValue();
             const svgPreview = document.getElementById('svgPreview');
             
+            if (!codigo || !codigo.trim()) {
+                svgPreview.innerHTML = '<rect class="viewport-rect" id="viewportRect" x="0" y="0" width="800" height="600" style="display: ' + (viewportVisible ? 'block' : 'none') + ';"></rect>';
+                document.getElementById('elementCount').textContent = 'Elementos: 0';
+                return;
+            }
+            
             try {
                 let svgContent = codigo;
                 const svgMatch = codigo.match(/<svg[\s\S]*?<\/svg>/i);
                 if (svgMatch) {
                     svgContent = svgMatch[0];
-                } else if (codigo.trim()) {
+                } else {
                     svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">${codigo}</svg>`;
                 }
 
@@ -998,60 +950,17 @@
                     svgPreview.innerHTML = '';
                     svgPreview.appendChild(viewportRect);
                     
-                    while (svgEl.firstChild) {
-                        if (svgEl.firstChild.tagName !== 'svg') {
-                            svgPreview.appendChild(svgEl.firstChild);
-                        } else {
-                            while (svgEl.firstChild.firstChild) {
-                                svgPreview.appendChild(svgEl.firstChild.firstChild);
-                            }
-                            break;
+                    Array.from(svgEl.childNodes).forEach(child => {
+                        if (child.nodeType === 1 && child.tagName !== 'svg') {
+                            svgPreview.appendChild(child.cloneNode(true));
                         }
-                    }
+                    });
 
-                    agregarHoverEvents();
                     document.getElementById('elementCount').textContent = `Elementos: ${svgPreview.children.length - 1}`;
                     document.getElementById('svgInfo').textContent = `SVG: ${width} x ${height}`;
                 }
             } catch (e) {
                 console.error('Error al renderizar SVG:', e);
-            }
-        }
-
-        function agregarHoverEvents() {
-            const svgPreview = document.getElementById('svgPreview');
-            const elements = svgPreview.querySelectorAll('[data-uid]');
-            
-            elements.forEach(el => {
-                el.addEventListener('mouseenter', () => {
-                    const uid = el.getAttribute('data-uid');
-                    resaltarEnCodigo(uid);
-                    el.style.filter = 'drop-shadow(0 0 5px var(--naranja))';
-                });
-                el.addEventListener('mouseleave', () => {
-                    quitarResaltadoCodigo();
-                    el.style.filter = '';
-                });
-            });
-        }
-
-        function resaltarEnCodigo(uid) {
-            const codigo = codeEditor.getValue();
-            const lines = codigo.split('\n');
-            for (let i = 0; i < lines.length; i++) {
-                if (lines[i].includes(`data-uid="${uid}"`) || lines[i].includes(`data-uid='${uid}'`)) {
-                    codeEditor.addLineClass(i, 'background', 'cm-highlight-line');
-                    codeEditor.scrollIntoView({ line: i, ch: 0 }, 100);
-                    break;
-                }
-            }
-        }
-
-        function quitarResaltadoCodigo() {
-            const codigo = codeEditor.getValue();
-            const lines = codigo.split('\n');
-            for (let i = 0; i < lines.length; i++) {
-                codeEditor.removeLineClass(i, 'background', 'cm-highlight-line');
             }
         }
 
@@ -1061,9 +970,9 @@
                 if (!raw.trim()) return;
                 const formatted = xmlFormatter(raw, { collapseContent: true, indentation: '  ' });
                 codeEditor.setValue(formatted);
-                showToast('Código formateado correctamente');
+                showToast('Código formateado');
             } catch (e) {
-                showToast('Error al formatear: XML inválido', 'danger');
+                showToast('Error al formatear', 'danger');
             }
         }
 
@@ -1073,14 +982,10 @@
         }
 
         function limpiarSVG() {
-            if (confirm('¿Limpiar todo el SVG?')) {
-                const svgPreview = document.getElementById('svgPreview');
-                const viewportRect = document.getElementById('viewportRect');
-                svgPreview.innerHTML = '';
-                svgPreview.appendChild(viewportRect);
-                viewportRect.style.display = viewportVisible ? 'block' : 'none';
+            if (confirm('¿Limpiar todo?')) {
                 codeEditor.setValue('');
                 if (blocklyWorkspace) blocklyWorkspace.clear();
+                actualizarPreview();
             }
         }
 
@@ -1135,12 +1040,17 @@
                     URL.revokeObjectURL(url);
                     showToast(`Imagen ${formato.toUpperCase()} descargada`);
                 };
+                img.onerror = function() {
+                    showToast('Error al generar imagen', 'danger');
+                };
                 img.src = url;
             }
         }
 
         // ============ GESTIÓN DE PROPIEDADES MEJORADA ============
-        function agregarPropiedad(nombre = '', tipo = 'number', defaultValue = '') {
+        let propiedadCounter = 0;
+
+        function agregarPropiedad(nombre = '', defaultValue = '') {
             propiedadCounter++;
             const container = document.getElementById('propiedadesContainer');
             const div = document.createElement('div');
@@ -1148,44 +1058,31 @@
             div.id = `propiedad-${propiedadCounter}`;
             
             div.innerHTML = `
+                <input type="text" class="form-control form-control-sm prop-nombre" value="${nombre}" placeholder="Nombre (ej: x, fill)" required>
+                <input type="text" class="form-control form-control-sm prop-default" value="${defaultValue}" placeholder="Valor por defecto">
                 <button type="button" class="btn-eliminar" onclick="eliminarPropiedad(${propiedadCounter})" title="Eliminar">×</button>
-                <div class="row">
-                    <div class="col-md-4 mb-2">
-                        <label class="form-label small">Nombre</label>
-                        <input type="text" class="form-control form-control-sm prop-nombre" value="${nombre}" placeholder="Ej: x, y, fill" required>
-                    </div>
-                    <div class="col-md-3 mb-2">
-                        <label class="form-label small">Tipo</label>
-                        <select class="form-select form-select-sm prop-tipo">
-                            <option value="number" ${tipo === 'number' ? 'selected' : ''}>Número</option>
-                            <option value="color" ${tipo === 'color' ? 'selected' : ''}>Color</option>
-                            <option value="text" ${tipo === 'text' ? 'selected' : ''}>Texto</option>
-                        </select>
-                    </div>
-                    <div class="col-md-5 mb-2">
-                        <label class="form-label small">Valor por defecto</label>
-                        <input type="text" class="form-control form-control-sm prop-default" value="${defaultValue}" placeholder="Ej: 0, #000000">
-                    </div>
-                </div>
             `;
             
             container.appendChild(div);
+            actualizarPropiedadesDisponibles();
         }
 
         function eliminarPropiedad(id) {
             const elem = document.getElementById(`propiedad-${id}`);
-            if (elem) elem.remove();
+            if (elem) {
+                elem.remove();
+                actualizarPropiedadesDisponibles();
+            }
         }
 
         function obtenerPropiedades() {
             const props = [];
             document.querySelectorAll('.propiedad-item').forEach(item => {
                 const nombre = item.querySelector('.prop-nombre').value.trim();
-                const tipo = item.querySelector('.prop-tipo').value;
                 const defaultValue = item.querySelector('.prop-default').value.trim();
                 
                 if (nombre) {
-                    props.push({ nombre, tipo, default: defaultValue });
+                    props.push({ nombre, default: defaultValue });
                 }
             });
             return props;
@@ -1193,16 +1090,50 @@
 
         function cargarPropiedadesEnFormulario(propiedadesJson) {
             document.getElementById('propiedadesContainer').innerHTML = '';
+            propiedadCounter = 0;
             if (propiedadesJson) {
                 try {
                     const props = JSON.parse(propiedadesJson);
                     props.forEach(p => {
-                        agregarPropiedad(p.nombre, p.tipo, p.default || '');
+                        agregarPropiedad(p.nombre, p.default || '');
                     });
                 } catch (e) {
                     console.error('Error cargando propiedades:', e);
                 }
             }
+            actualizarPropiedadesDisponibles();
+        }
+
+        function actualizarPropiedadesDisponibles() {
+            const container = document.getElementById('propiedadesDisponibles');
+            const propiedades = obtenerPropiedades();
+            
+            if (propiedades.length === 0) {
+                container.innerHTML = '<span class="text-muted">Agrega propiedades arriba para verlas aquí</span>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            propiedades.forEach(prop => {
+                const tag = document.createElement('span');
+                tag.className = 'prop-tag';
+                tag.textContent = `{{${prop.nombre}}}`;
+                tag.title = `Valor por defecto: ${prop.default || 'vacío'}`;
+                tag.onclick = () => insertarPropiedadEnCodigo(prop.nombre);
+                container.appendChild(tag);
+            });
+        }
+
+        function insertarPropiedadEnCodigo(nombre) {
+            const textarea = document.getElementById('funcionCodigo');
+            const placeholder = `{{${nombre}}}`;
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const value = textarea.value;
+            
+            textarea.value = value.substring(0, start) + placeholder + value.substring(end);
+            textarea.selectionStart = textarea.selectionEnd = start + placeholder.length;
+            textarea.focus();
         }
 
         // ============ FUNCIONES CRUD ============
@@ -1244,6 +1175,7 @@
             document.getElementById('formFuncionTitle').textContent = 'Nueva Función';
             document.getElementById('propiedadesContainer').innerHTML = '';
             propiedadCounter = 0;
+            actualizarPropiedadesDisponibles();
 
             if (id) {
                 const func = funciones.find(f => f.ID === id);
@@ -1256,10 +1188,6 @@
                     cargarPropiedadesEnFormulario(func.Propiedades);
                     document.getElementById('formFuncionTitle').textContent = 'Editar Función';
                 }
-            } else {
-                // Agregar propiedades de ejemplo por defecto
-                agregarPropiedad('x', 'number', '0');
-                agregarPropiedad('y', 'number', '0');
             }
             
             bootstrap.Modal.getInstance(document.getElementById('modalFunciones')).hide();
@@ -1298,7 +1226,7 @@
                 showToast('Función guardada correctamente');
             } catch (err) {
                 console.error(err);
-                showToast('Error al guardar la función', 'danger');
+                showToast('Error al guardar', 'danger');
             } finally {
                 document.getElementById('loadingOverlay').classList.remove('active');
             }
@@ -1337,7 +1265,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <strong>${proy.Nombre}</strong>
-                            <div class="small text-muted">${proy.Ancho_Viewport} x ${proy.Alto_Viewport} • ${proy.Fecha_Modificacion}</div>
+                            <div class="small text-muted">${proy.Ancho_Viewport} x ${proy.Alto_Viewport}</div>
                         </div>
                         <button class="btn-icon btn-delete" onclick="event.stopPropagation(); borrarProyecto('${proy.ID}')" style="background: var(--rojo-atardecer); color: white;">
                             <i class="bi bi-trash-fill"></i>
